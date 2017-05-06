@@ -1,16 +1,17 @@
 const fs = require('fs')
 
-// first 16 codes are reserved in case we need them for special codes later on
-// 0x10 'push' pushes an immediate value (i.e. an allowed value not a pointer) onto the operand stack
-// 0x11 'add'  adds the top two numbers on the stack and pushes the result back onto stack
-// 0x12 'sub'  subtracts the top two numbers on the stack and pushes the result back onto stack
-// 0x13 'gstore' stores value at top of stack in global array, at index arg
-// 0x14 'gload'  loads from global array (at index arg) onto stack
-// 0x15 'jump'   mutate instruction pointer to value given by arg
-// 0x16 'jump_if_false'  `jump` but only if value at top of stack is false
-// 0x17 'inc' increment value at top of stack by one
-// 0x18 'less_than'  remove top two stack items--push true to stack if first-popped less than second-popped, else push false
-// 0xFF 'halt' stops the interpreter
+const map = {
+  0x10: 'push',  // pushes an immediate value (i.e. an allowed value not a pointer) onto the operand stack
+  0x11: 'add',  //  adds the top two numbers on the stack and pushes the result back onto stack
+  0x12: 'sub',  //  subtracts the top two numbers on the stack and pushes the result back onto stack
+  0x13: 'gstore',  // stores value at top of stack in global array, at index arg
+  0x14: 'gload',  //  loads from global array (at index arg) onto stack
+  0x15: 'jump',  //   mutate instruction pointer to value given by arg
+  0x16: 'jump_if_false',  //  `jump` but only if value at top of stack is false
+  0x17: 'inc',  // increment value at top of stack by one
+  0x18: 'less_than',  //  remove top two stack items--push true to stack if first-popped less than second-popped, else push false
+  0xFF: 'halt',  // stops the interpreter
+}
 
 
 function run (code, meta) {
@@ -23,7 +24,7 @@ function run (code, meta) {
 	while (ip < code.length) {
 		var currentInstruction = code[ip]
     let a, b, result
-    console.log({currentInstruction, ip, operands, globals})
+    console.log({currentInstruction: map[currentInstruction], ip, operands, globals})
     ip++
 
 		switch (currentInstruction) {

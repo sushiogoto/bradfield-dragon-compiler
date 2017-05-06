@@ -13,12 +13,70 @@
 #        gstore 0
 #        gload 1
 #        inc
+#        gstore 1
 #        jump start
 
-# end:   halt
-# Push 5 stack
+- !assert-index 0
+# push 0
+- !hex 10
+- !i16be 0
+- !assert-index 3
+# gstore 0
+- !hex 13
+- !i16be 0
+- !assert-index 6
+# push 0
+- !hex 10
+- !i16be 0
+- !assert-index 9
+# gstore 1
+- !hex 13
+- !i16be 1
+- !assert-index 12
+# push 5
 - !hex 10
 - !i16be 5
-# Increment 5 to 6
+- !assert-index 15
+# gload 5
+- !hex 14
+- !i16be 1
+- !assert-index 18
+# less_than
+- !hex 18
+- !assert-index 19
+# jump_if_false
+- !hex 16
+- !i16be 42
+- !assert-index 22
+# gload 0
+- !hex 14
+- !i16be 0
+- !assert-index 25
+# gload 1
+- !hex 14
+- !i16be 1
+- !assert-index 28
+# add
+- !hex 11
+- !assert-index 29
+# gstore 0
+- !hex 13
+- !i16be 0
+- !assert-index 32
+# gload 1
+- !hex 14
+- !i16be 1
+- !assert-index 35
+# inc
 - !hex 17
+- !assert-index 36
+# gstore 1
+- !hex 13
+- !i16be 1
+- !assert-index 39
+# jump to start
+- !hex 15
+- !i16be 12
+- !assert-index 42
+# halt
 - !hex FF
