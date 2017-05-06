@@ -1,0 +1,24 @@
+--- !hc
+#        push 0
+#        gstore 0
+#        push 0
+#        gstore 1
+# start: push 5
+#        gload 1
+#        less_than
+#        jump_if_false
+#        gload 0
+#        gload 1
+#        add
+#        gstore 0
+#        gload 1
+#        inc
+#        jump start
+
+# end:   halt
+# Push 5 stack
+- !hex 10
+- !i16be 5
+# Increment 5 to 6
+- !hex 17
+- !hex FF

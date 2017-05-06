@@ -1,0 +1,4 @@
+--- !hc
+# this instruction pushes three onto stack
+- !hex 10 00 03 
+- !hex 10 00 04 11 10 00 01 12 FF
