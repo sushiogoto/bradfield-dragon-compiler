@@ -1,0 +1,3 @@
+IDENTIFIER foo
+ASSIGN =
+STRING 'bar!'

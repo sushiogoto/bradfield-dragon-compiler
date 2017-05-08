@@ -1,0 +1,19 @@
+%%
+\s+		/* skip whitespace */
+
+[0-9]+					return 'NUM'
+\-						return 'SUB'
+\+						return 'ADD'
+\(						return 'LPAREN'
+\)						return 'RPAREN'
+\;						return 'SC'
+\=						return 'ASSIGN'
+while					return 'WHILE'
+[a-zA-Z][a-zA-Z0-9]+	return 'IDENTIFIER'
+\<						return 'LT'
+\{						return 'LCURLY'
+\}						return 'RCURLY'
+\'[^']*\'					return 'STRING'
+
+<<EOF>>					return 'EOF'
+.						return 'INVALID'

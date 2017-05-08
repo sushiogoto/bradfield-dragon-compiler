@@ -1,0 +1,6 @@
+sum = 0;
+index = 0;
+while (index < 5) {
+	sum = sum + index;
+	index = index + 1;
+}

@@ -1,0 +1,10 @@
+NUM 1
+SUB -
+LPAREN (
+NUM 3
+ADD +
+NUM 4
+RPAREN )
+ADD +
+NUM 0
+SC ;
