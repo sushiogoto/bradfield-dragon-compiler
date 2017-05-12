@@ -1,0 +1,26 @@
+--- !RootNode
+children:
+- !AssignmentNode
+  left: !IdentifierTerminal "sum"
+  right: !NumTerminal "0"
+- !AssignmentNode
+  left: !IdentifierTerminal "index"
+  right: !NumTerminal "0"
+- !WhileNode
+  condition: !OpNode
+    op: "<"
+    left: !IdentifierTerminal "index"
+    right: !NumTerminal "5"
+  children:
+    - !AssignmentNode
+      left: !IdentifierTerminal "sum"
+      right: !OpNode
+        op: "+"
+        left: !IdentifierTerminal "sum"
+        right: !IdentifierTerminal "index"
+    - !AssignmentNode
+      left: !IdentifierTerminal "index"
+      right: !OpNode
+        op: "+"
+        left: !IdentifierTerminal "index"
+        right: !NumTerminal "1"

@@ -1,4 +1,4 @@
-IDENTIFIER sum // identifier vs variable name -> generic & abstract vs something that changes
+IDENTIFIER sum
 ASSIGN =
 NUM 0
 SC ;

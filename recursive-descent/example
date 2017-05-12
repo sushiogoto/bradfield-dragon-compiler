@@ -1,0 +1,24 @@
+[ [ 'LBRACK', '[' ],
+  [ 'NUM', '1' ],
+  [ 'COMMA', ',' ],
+  [ 'LBRACK', '[' ],
+  [ 'NUM', '2' ],
+  [ 'COMMA', ',' ],
+  [ 'LBRACK', '[' ],
+  [ 'NUM', '3' ],
+  [ 'COMMA', ',' ],
+  [ 'NUM', '4' ],
+  [ 'RBRACK', ']' ],
+  [ 'RBRACK', ']' ],
+  [ 'RBRACK', ']' ],
+  [ 'EOF', 'EOF' ] ]
+
+  
+{ type: 'listNode',
+  children: 
+   [ [ 'NUM', '1' ],
+     { type: 'listNode',
+       children: 
+        [ [ 'NUM', '2' ],
+          { type: 'listNode',
+            children: [ [ 'NUM', '3' ], [ 'NUM', '4' ] ] } ] } ] }

@@ -1,0 +1,12 @@
+--- !RootNode
+children:
+- !OpNode
+	op: "+"
+ 	left: !OpNode
+ 		op: "-"
+ 		left: !NumTerminal "1"
+ 		right: !OpNode
+ 			op: "+"
+ 			left: !NumTerminal "3"
+ 			right: !NumTerminal "4"
+ 	right: !NumTerminal "0"
