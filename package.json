@@ -1,5 +1,6 @@
 {
 	"dependencies": {
-		"jison-lex": "*"
+		"jison-lex": "*",
+		"jison": "*"
 	}
 }

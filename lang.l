@@ -13,7 +13,7 @@ while					return 'WHILE'
 \<						return 'LT'
 \{						return 'LCURLY'
 \}						return 'RCURLY'
-\'[^']*\'					return 'STRING'
+\'[^']*\'				return 'STRING'
 
 <<EOF>>					return 'EOF'
 .						return 'INVALID'
