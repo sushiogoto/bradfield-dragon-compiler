@@ -11,11 +11,11 @@
 \;						return 'SC'
 \=						return 'ASSIGN'
 while					return 'WHILE'
+dprint					return 'DPRINT'
 [a-zA-Z][a-zA-Z0-9]+	return 'IDENTIFIER'
 \<						return 'LT'
 \{						return 'LCURLY'
 \}						return 'RCURLY'
 \'[^']*\'				return 'STRING'
-
 <<EOF>>					return 'EOF'
 .						return 'INVALID'

@@ -2,7 +2,8 @@
 %start program
 %%
 program
-	: exp1 EOF {return $1}
+	: DPRINT exp1 SC EOF { return af.dprint($2) }
+	| exp1 EOF {return $1}
 	;
 exp1
 	: exp2
