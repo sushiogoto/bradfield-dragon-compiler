@@ -4,6 +4,8 @@
 [0-9]+					return 'NUM'
 \-						return 'SUB'
 \+						return 'ADD'
+\*						return 'MUL'
+\/						return 'DIV'
 \(						return 'LPAREN'
 \)						return 'RPAREN'
 \;						return 'SC'

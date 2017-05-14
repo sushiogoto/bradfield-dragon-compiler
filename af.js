@@ -13,6 +13,12 @@ const af = {
         left,
         right,
     }),
+    dbg: (name, ...args) => {
+    	let n = this[name](...args)
+    	console.log(n)
+    	return n
+    }
 }
+
 
 module.exports = af
