@@ -1,0 +1,27 @@
+--- !hc
+# data segment codes:
+# 0x00 : reserved ...
+# 0x0e : address of entry point
+# 0x0f : count of globals in program
+# 0x10 : count of constants in program, followed by consts
+# 0x11 : type code of function signature
+
+# zero globals in program
+- !hex 0f
+- !i16be 0
+
+# fns signatures appear in const list and are encoded like:
+#  code, address, arg-count, locals count, name bytes count, name bytes
+
+# begin list of constants
+- !hex 0x10
+# of which there is just one
+- !i16be 1
+
+# square = (number)
+- !hex 11   # type (fn)
+- !ui16be 7 # code address
+- !ui16be 1 # one argument
+- !ui16be 0 # no local variables
+- !ui16be 6 # name length
+- !utf8 square

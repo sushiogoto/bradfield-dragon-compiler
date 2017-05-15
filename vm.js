@@ -10,7 +10,12 @@ const map = {
   0x16: 'jump_if_false',  //  `jump` but only if value at top of stack is false
   0x17: 'inc',  // increment value at top of stack by one
   0x18: 'less_than',  //  remove top two stack items--push true to stack if first-popped less than second-popped, else push false
-  0X19: 'dprint',
+  0x19: 'dprint', // pop top of stack, make human-readable string value from it, write value to stdout with trailing newline
+  0x1a: 'lstore', // stores value at top of stack in locals array (at index arg)
+  0x1b: 'lload', // load value from locals array (at index arg) to top of stack
+  0x1c: 'mul', // pop top two operands, multiply them together, push result
+  0x1d: 'call', // invoke the function described in the const array (at index arg), pops params from stack pushes return value
+  0x1e: 'return', // change instruction pointer to return address in current stack frame, then remove stack frame
   0xFF: 'halt',  // stops the interpreter
 }
 
@@ -56,7 +61,7 @@ function run (code, meta) {
         globals[b] = a
         break
        // gload
-      case 0x14: 
+      case 0x14:
         a = code.slice(ip, ip += 2).readUInt16BE()
         operands.push(globals[a])
         break

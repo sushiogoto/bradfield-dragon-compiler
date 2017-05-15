@@ -1,0 +1,26 @@
+--- !hc
+# relevant bytecodes (hex)
+#  10 : push immediate
+#  19 : dprint
+#  1a : local store
+#  1b : local load (from locals idx to operand stack)
+#  1c : multiply
+#  1d : call
+#  1e : return
+#  ff : halt
+
+- !assert-index 0 # 'main' code block begins here
+- !hex 10         # push 2
+- !i16le 2
+- !hex 1d         # square() (invoke fn with sig at const index 0)
+- !hex 0
+- !hex 19         # dprint
+- !hex ff         # halt
+
+- !assert-index 7 # 'square' fn begins at this index
+- !hex 1b         # load 'n' (local at index 0)
+- !i16be 0        #
+- !hex 1b         # load 'n' (local at index 0)
+- !i16be 0        #
+- !hex 1c         # n * n
+- !hex 1e         # return to caller
