@@ -10,6 +10,7 @@ const map = {
   0x16: 'jump_if_false',  //  `jump` but only if value at top of stack is false
   0x17: 'inc',  // increment value at top of stack by one
   0x18: 'less_than',  //  remove top two stack items--push true to stack if first-popped less than second-popped, else push false
+  0X19: 'dprint',
   0xFF: 'halt',  // stops the interpreter
 }
 
@@ -82,6 +83,9 @@ function run (code, meta) {
         b = operands.pop()
         operands.push(a < b)
         break
+      // dprint
+      case 0x19:
+        console.log(operands.pop())
 			// halt
 			case 0xFF:
         console.log(operands)
@@ -94,7 +98,8 @@ function run (code, meta) {
 }
 
 if (module === require.main) {
-  const code = fs.readFileSync('./examples/bytecode-programs/program-b/code')
+  // const code = fs.readFileSync('./examples/bytecode-programs/program-b/code')
+  const code = new Buffer([ 16, 0, 0, 16, 0, 4, 16, 0, 3, 17, 16, 0, 1, 18, 17, 25 ]);
 	const meta = fs.readFileSync('./examples/bytecode-programs/program-b/meta')
 
   run(code, meta) // [-6]
