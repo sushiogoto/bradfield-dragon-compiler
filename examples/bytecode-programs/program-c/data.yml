@@ -1,0 +1,28 @@
+--- !hc
+# data segment codes:
+# 0x00 : reserved ...
+# 0x0f : set count of globals
+# 0x10 : load count number of consts
+
+# type codes:
+# 0x10 : type code of function signature
+
+# entry address is 0
+- !hex 0e
+- !i16be 0
+
+# zero globals in code object
+- !hex 0f
+- !i16be 0
+
+# load one const
+- !hex 10
+- !i16be 1
+
+# fn square(number)
+- !hex 10   # type (fn)
+- !ui16be 8 # code address
+- !ui8 1    # one argument
+- !ui8 0    # no local variables
+- !ui8 6    # name byte length
+- !utf8 square

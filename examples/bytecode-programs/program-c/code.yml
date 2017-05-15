@@ -11,13 +11,13 @@
 
 - !assert-index 0 # 'main' code block begins here
 - !hex 10         # push 2
-- !i16le 2
+- !i16be 2
 - !hex 1d         # square() (invoke fn with sig at const index 0)
-- !hex 0
+- !i16be 0
 - !hex 19         # dprint
 - !hex ff         # halt
 
-- !assert-index 7 # 'square' fn begins at this index
+- !assert-index 8 # 'square' fn begins at this index
 - !hex 1b         # load 'n' (local at index 0)
 - !i16be 0        #
 - !hex 1b         # load 'n' (local at index 0)
