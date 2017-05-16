@@ -1,3 +1,5 @@
+/* eslint comma-dangle: ["error", "always-multiline"] */
+
 const fs = require('fs')
 
 const map = {
@@ -14,41 +16,40 @@ const map = {
   0xFF: 'halt',  // stops the interpreter
 }
 
-
 function run (code, meta) {
   const globalSize = meta.readUInt16BE()
   let globals = new Array(globalSize)
 
-	var operands = []
-	var ip = 0 // aka entryPoint, doesn't have to start at 0
+  var operands = []
+  var ip = 0 // aka entryPoint, doesn't have to start at 0
 
-	while (ip < code.length) {
-		var currentInstruction = code[ip]
+  while (ip < code.length) {
+    var currentInstruction = code[ip]
     let a, b, result
     console.log({currentInstruction: map[currentInstruction], ip, operands, globals})
     ip++
 
-		switch (currentInstruction) {
-			// push
-			case 0x10:
+    switch (currentInstruction) {
+      // push
+      case 0x10:
         a = code.slice(ip, ip + 2).readInt16BE()
         ip += 2
-				operands.push(a)
-				break
-			// add
-			case 0x11:
-				a = operands.pop()
-				b = operands.pop()
-				result = a + b
-				operands.push(result)
-				break
-			// sub
-			case 0x12:
-				a = operands.pop()
-				b = operands.pop()
-				result = a - b
-				operands.push(result)
-				break
+        operands.push(a)
+        break
+      // add
+      case 0x11:
+        a = operands.pop()
+        b = operands.pop()
+        result = a + b
+        operands.push(result)
+        break
+      // sub
+      case 0x12:
+        a = operands.pop()
+        b = operands.pop()
+        result = a - b
+        operands.push(result)
+        break
       // gstore
       case 0x13:
         a = operands.pop()
@@ -56,7 +57,7 @@ function run (code, meta) {
         globals[b] = a
         break
        // gload
-      case 0x14: 
+      case 0x14:
         a = code.slice(ip, ip += 2).readUInt16BE()
         operands.push(globals[a])
         break
@@ -86,8 +87,9 @@ function run (code, meta) {
       // dprint
       case 0x19:
         console.log(operands.pop())
-			// halt
-			case 0xFF:
+        break
+      // halt
+      case 0xFF:
         console.log(operands)
         console.log(globals)
         return
@@ -99,8 +101,8 @@ function run (code, meta) {
 
 if (module === require.main) {
   // const code = fs.readFileSync('./examples/bytecode-programs/program-b/code')
-  const code = new Buffer([ 16, 0, 0, 16, 0, 4, 16, 0, 3, 17, 16, 0, 1, 18, 17, 25 ]);
-	const meta = fs.readFileSync('./examples/bytecode-programs/program-b/meta')
+  const code = new Buffer([ 16, 0, 0, 16, 0, 4, 16, 0, 3, 17, 16, 0, 1, 18, 17, 25 ])
+  const meta = fs.readFileSync('./examples/bytecode-programs/program-b/meta')
 
   run(code, meta) // [-6]
 }
