@@ -1,24 +1,24 @@
 /*
-$ node dev/tokenize.js <<< '1 23 -45'
+# to test/debug the lexer
+$ node dev/tokenize.js <<< '1 + (2 - 4)'
 NUM 1
-NUM 23
-NUM -45
+ADD +
+LPAREN (
+NUM 2
+SUB -
+NUM 4
+RPAREN )
+EOF
 */
 
 const fs = require('fs')
-const { resolve } = require('path')
-
-// input to lex
+const lexer = require('../lex')
+// read input to lex from stdin
 const stdinStr = fs.readFileSync('/dev/stdin', 'utf8')
-// lex program source
-const lexSrcStr = fs.readFileSync(resolve(__dirname, '../lang.l'), 'utf8')
-
-// create lexer instance
-const JisonLex = require('jison-lex')
-const lexer = JisonLex(lexSrcStr)
-
-// lex the input
 lexer.setInput(stdinStr)
+// print each token and lexeme on own line
 let tokenClass
-while (tokenClass = lexer.lex(), tokenClass != 'EOF')
+do {
+  tokenClass = lexer.lex()
   console.log(tokenClass, lexer.yytext)
+} while (tokenClass !== 'EOF')
