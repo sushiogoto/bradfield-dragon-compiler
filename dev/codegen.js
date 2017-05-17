@@ -1,27 +1,14 @@
 /*
-$ node dev/ast.js <<< 'let foo = 123;'
-{ type: 'ASSIGN',
-  id: { type: 'ID', name: 'foo' },
-  exp: { type: 'NUM', value: 123 } }
+# test/debug the code generator
+$ node dev/codegen.js <<< '1 + 2 - 3'
+[ 16, 0, 3, 16, 0, 2, 16, 0, 1, 17, 18 ]
 */
 
 const fs = require('fs')
-const { resolve } = require('path')
-const codegen = require('../codegen')
-// read input
-const stdinStr = fs.readFileSync('/dev/stdin', 'utf8')
+const parse = require('../parse')
+const gen = require('../codegen')
+const input = fs.readFileSync('/dev/stdin', 'utf8')
 
-// lexer
-const lsrc = fs.readFileSync(resolve(__dirname, '../lang.l'), 'utf8')
-const lexer = require('jison-lex')(lsrc)
-
-// parser
-const psrc = fs.readFileSync(resolve(__dirname, '../lang.g'), 'utf8')
-const parser = new require('jison').Parser(psrc)
-
-const factory = require(resolve(__dirname, '../af'))
-
-parser.lexer = lexer
-console.dir(codegen(parser.parse(stdinStr, factory)))
-// console.dir(parser.parse(stdinStr, factory), {depth: null})
-// console.log(parser.generate())
+// todo: output code and data segments
+// todo: dissasemble output
+console.dir(gen(parse(input)))

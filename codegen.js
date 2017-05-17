@@ -1,36 +1,17 @@
-// { type: 'DPrint',
-//   value: 
-//    { type: 'OpNode',
-//      op: '+',
-//      left: { type: 'OpNode', op: '*', left: [Object], right: [Object] },
-//      right: { type: 'Num', value: '4' } } }
-// "dprint (1 + 2) * 3 + 4;"
+// we traverse the ast in preoder (root node first, then left to right),
+// but we "unshift" the generated code into the output array.
+// so if you read the generated code left to right, it looks like the
+// result of a postorder (right to left) traversal
 
-// { type: 'DPrint',
-//   value: 
-//    { type: 'OpNode',
-//      op: '+',
-//      left: { type: 'Num', value: '1' },
-//      right: { type: 'Num', value: '2' } } }
+// also, this generator doesn't know anything about functions,
+// you could say it thinks all that exists is the body of a "main"
+// function that calls no other functions
 
 function codegen (ast) {
-  console.log(ast)
-  var stack = [ast];
-  var code = [];
+  var stack = [ast]
+  var code = []
   while (stack.length) {
-    var node = stack.pop();
-    
-    // make a switch statement based on node type
-    // when dprint -> shift bytecode onto code array
-    //    push value onto the stack
-    // when OpNode ->
-    //    if op '+' -> shift ADD onto code array
-    //    if op '-' -> shift SUB onto code array
-    //    push right onto the stack
-    //    push left onto the stack
-    // when Num ->
-    //    shift int onto the code array in little endian
-    //    shift bytecode onto the code array
+    var node = stack.pop()
     switch (node.type) {
       case 'DPrint':
         code.unshift(0x19)
@@ -62,7 +43,7 @@ function codegen (ast) {
         throw new Error(`unsupported node type "${node.type}"`)
     }
   }
-  return code;
-} 
+  return code
+}
 
 module.exports = codegen
