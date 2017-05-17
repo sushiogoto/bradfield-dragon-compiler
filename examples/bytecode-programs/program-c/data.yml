@@ -1,12 +1,12 @@
 --- !hc
 # data segment codes:
 # 0x00 : reserved ...
+# 0x0e : set entry address
 # 0x0f : set count of globals
 # 0x10 : load count number of consts
+# 0x11 : load function sig
 
-# type codes:
-# 0x10 : type code of function signature
-
+# <Buffer 0e 00 00 0f 00 00 10 00 01 11 00 08 01 00 06 73 71 75 61 72 65>
 # entry address is 0
 - !hex 0e
 - !i16be 0
@@ -20,7 +20,7 @@
 - !i16be 1
 
 # fn square(number)
-- !hex 10   # type (fn)
+- !hex 11   # load function sig
 - !ui16be 8 # code address
 - !ui8 1    # one argument
 - !ui8 0    # no local variables

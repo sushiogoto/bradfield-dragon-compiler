@@ -1,6 +1,39 @@
 // declare square function
-square = (n) => { return n * n }
+dgn square (n) { return n * n; }
 
 // print result of invoking function
 // n.b. dprint is keyword, not function
-dprint square(2) // prints 4
+dgn main () { dprint square(2); } // prints 4
+
+# disassembly for above source code
+# main
+00:	PUSH 2
+03:	CALL 0	# square
+06: DPRINT
+07: HALT
+# square(n)
+08: LLOAD 0	# load n
+11: LLOAD 0	# load n
+14: MUL
+15: RET
+
+# { 
+# 	constants:[
+# 		{name: "square",
+		 addr: 8,
+		 arg: 1,
+		 locals_count: 0}
+# 	],
+# 	entry: 0,
+# 	global_size: 0
+# }
+
+00: SET_ENTRY 0
+03: SET_GLOBAL_SIZE 0
+06: LOAD_CONSTANTS 1
+09: LOAD_CONSTANT_FUNCTION
+10: 8 # address (2 byte BE uint)
+12: 1 # number of args (1 byte uint)
+13: 0 # number of locals
+14: 6 "square" # length prefixing
+21: 

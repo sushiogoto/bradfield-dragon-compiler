@@ -16,10 +16,71 @@ const map = {
   0xFF: 'halt',  // stops the interpreter
 }
 
-function run (code, meta) {
-  const globalSize = meta.readUInt16BE()
-  let globals = new Array(globalSize)
+// program linker/loader bytecodes
+const loader_codes = {
+  // 0x00 to 0x0d reserved
+  0x0e: 'set_entry' /* ui16 address */,       // set code address of program entry point
+  0x0f: 'set_globals_count' /* ui16 count */, // set globals array to length of $count
+  0x10: 'load_consts' /* ui16 count */,       // load $count consts definitions into consts array
+  0x11: 'load_function' // load function
+}
 
+function load_data (buf, i = 0) {
+  let byte, loader_code, n, a
+  let globals_count = 0
+  let entry_address = 0
+  let constants = []
+  while (i < buf.length) {
+    byte = buf[i]
+    i++
+    loader_code = loader_codes[byte]
+    switch (loader_code) {
+      case 'set_entry':
+        n = buf.slice(i, i + 2).readUInt16BE(); i += 2
+        entry_address = n
+        break
+      case 'set_globals_count':
+        n = buf.slice(i, i + 2).readUInt16BE(); i += 2
+        globals_count = n
+        break
+      case 'load_consts':
+        n = buf.slice(i, i + 2).readUInt16BE(); i += 2
+        ;[constants, i] = load_consts(buf, n, i)
+        break
+      default:
+        throw new Error(`unrecognized loader code ${byte.toString(16)} at index of ${i-1} of data`)
+    }
+  }
+  return { entry_address, globals_count, constants }
+}
+
+function load_consts (buf, n, i = 0) {
+  let constants = [], type_byte, record, len
+  while (n > 0) {
+    type_byte = buf[i]
+    i++, n--, record = {}
+    switch (type_byte) {
+      // load function code
+      case 0x11:
+        record.type = type_byte
+        record.address = buf.slice(i, i + 2).readUInt16BE(); i += 2
+        record.arg_count = buf[i]; i += 1
+        record.locals_count =  buf[i]; i += 1
+        len = buf[i]; i += 1
+        record.name = buf.slice(i, i + len).toString('utf8'); i += len
+        constants.push(record)
+        break;
+      default:
+        throw new Error(`unrecognized const type code ${type_byte.toString(16)} at index of ${i-1} of data`)
+    }
+  }
+  return [constants, i]
+}
+
+function run (code, data) {
+  console.log(load_data(data))
+  process.exit()
+  let globals = new Array(globalSize)
   var operands = []
   var ip = 0 // aka entryPoint, doesn't have to start at 0
 
