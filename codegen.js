@@ -1,4 +1,4 @@
-// we traverse the ast in preoder (root node first, then left to right),
+// we traverse the ast in preorder (root node first, then left to right),
 // but we "unshift" the generated code into the output array.
 // so if you read the generated code left to right, it looks like the
 // result of a postorder (right to left) traversal

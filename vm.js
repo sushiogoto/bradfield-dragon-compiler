@@ -100,11 +100,3 @@ function run (code, meta) {
 }
 
 module.exports = { run, map }
-
-if (module === require.main) {
-  // const code = fs.readFileSync('./examples/bytecode-programs/program-b/code')
-  const code = new Buffer([ 16, 0, 0, 16, 0, 4, 16, 0, 3, 17, 16, 0, 1, 18, 17, 25 ])
-  const meta = fs.readFileSync('./examples/bytecode-programs/program-b/meta')
-
-  run(code, meta) // [-6]
-}
