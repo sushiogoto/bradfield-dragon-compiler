@@ -12,7 +12,8 @@ const map = {
   0x16: 'jump_if_false',  //  `jump` but only if value at top of stack is false
   0x17: 'inc',  // increment value at top of stack by one
   0x18: 'less_than',  //  remove top two stack items--push true to stack if first-popped less than second-popped, else push false
-  0X19: 'dprint',
+  0x19: 'dprint',
+  0x1d: 'call', // 
   0xFF: 'halt',  // stops the interpreter
 }
 
@@ -78,11 +79,11 @@ function load_consts (buf, n, i = 0) {
 }
 
 function run (code, data) {
-  console.log(load_data(data))
-  process.exit()
-  let globals = new Array(globalSize)
+  let { entry_address, globals_count, constants } = load_data(data)
+  let globals = new Array(globals_count)
   var operands = []
-  var ip = 0 // aka entryPoint, doesn't have to start at 0
+  var ip = entry_address
+  let callStack = [{fnName: 'main'}]
 
   while (ip < code.length) {
     var currentInstruction = code[ip]
@@ -149,13 +150,49 @@ function run (code, data) {
       case 0x19:
         console.log(operands.pop())
         break
+      // call 
+      // takes in an unsigned integer that is index in consts array
+      case 0x1d: {
+        let index = code.slice(ip, ip += 2).readUInt16BE()
+        let fSig = constants[index]
+        let locals = []
+        for(let j=0; j < fSig.arg_count; j++){
+          locals.push(operands.pop())
+        }
+        let frame = {
+          locals: locals,
+          returnAddr: ip,
+          fnName: fSig.name
+        }
+
+        callStack.push(frame)
+        ip = fSig.address
+
+      };break
+      // local load
+      case 0x1b: {
+        a = code.slice(ip, ip += 2).readUInt16BE()
+        let index = callStack.length - 1
+        operands.push(callStack[index].locals[a])
+      };break
+      // mult
+      case 0x1c:
+        a = operands.pop()
+        b = operands.pop()
+        result = a * b
+        operands.push(result)
+        break
+      case 0x1e:
+        frame = callStack.pop()
+        ip = frame.returnAddr
+        break
       // halt
       case 0xFF:
         console.log(operands)
         console.log(globals)
         return
       default:
-        throw new Error('invalid operation')
+        throw new Error(`invalid operation ${currentInstruction.toString(16)}`)
     }
   }
 }
