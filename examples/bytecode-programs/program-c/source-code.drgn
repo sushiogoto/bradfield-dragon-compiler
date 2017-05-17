@@ -1,0 +1,6 @@
+// declare square function
+square = (n) => { return n * n }
+
+// print result of invoking function
+// n.b. dprint is keyword, not function
+dprint square(2) // prints 4
