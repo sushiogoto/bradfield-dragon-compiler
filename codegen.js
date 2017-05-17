@@ -12,7 +12,9 @@ function codegen (ast) {
   var code = []
 
   const functions = Object.create(null)
-  let address = 0
+  let functionCount = 0;
+
+  let position = 0
 
   while (stack.length) {
     var node = stack.pop()
@@ -23,11 +25,12 @@ function codegen (ast) {
       case 'FunctionNode':
         if (node.name === 'main') {
           code.unshift(0xff)
-          address++
+          position++
         }
 
         const fn = {
           name: node.name,
+          number: functionCount++,
           arg_count: 0,
           locals_count: 0
         }
@@ -48,26 +51,45 @@ function codegen (ast) {
         // we'll need this to be the distance from the beginning
         // so we will subtract this from the length of the buffer below this
         // while loop to get the true address
-        node.fn.address = address;
+        node.fn.positionFromEnd = position;
         break
       case 'DPrint':
         code.unshift(0x19)
-        address++
+        position++
+        stack.push(node.value)
+        break
+      case 'Call':
+        // const buf = Buffer.allocUnsafe(2)
+        // buf.writeInt16LE(node.value)
+        // code.unshift(buf[0])
+        // code.unshift(buf[1])
+
+        // the function being called might not have been added to functions yet
+        // so we'll just add the name here and replace it after the code has
+        // been generated
+        code.unshift(0)
+        code.unshift(node.name)
+        code.unshift(0x1d)
+        position += 3
+        break
+      case 'Return':
+        code.unshift(0x1e)
+        position++
         stack.push(node.value)
         break
       case 'OpNode':
         switch (node.op) {
           case '+':
             code.unshift(0x11)
-            address++
+            position++
             break
           case '-':
             code.unshift(0x12)
-            address++
+            position++
             break
           case '*':
             code.unshift(0x1c)
-            address++
+            position++
             break
           default:
             throw new Error(`unsupported operation "${node.op}"`)
@@ -82,7 +104,7 @@ function codegen (ast) {
         code.unshift(buf[0])
         code.unshift(buf[1])
         code.unshift(0x10)
-        address += 3
+        position += 3
         break
       default:
         throw new Error(`unsupported node type "${node.type}"`)
@@ -93,15 +115,57 @@ function codegen (ast) {
   // convert them to distance from beginning of code
   for (name in functions) {
     const fn = functions[name]
-    fn.address = code.length - fn.address
+    fn.address = code.length - fn.positionFromEnd
+  }
+
+  // TODO: need to make it explicit these are function symbols
+  // resolve symbol references
+  let i = 0;
+
+  while (i < code.length) {
+    if (typeof code[i] === 'string') {
+      if (!(code[i] in functions))
+        throw new Error(`could not find symbol ${code}`)
+      const fn = functions[code[i]]
+      const buf = Buffer.allocUnsafe(2)
+      buf.writeUInt16BE(fn.number)
+      code[i] = buf[0]
+      code[i + 1] = buf[1]
+      i++
+    }
+
+    i++
   }
 
   if (!('main' in functions))
     throw new Error('could not find main function')
 
   // { entry_address, globals_count, constants }
-  const entry_address = functions['main'].address;
+  const entry_address = functions['main'].address
+  const constantCount = functionCount
 
+  const constants = []
+
+  for (name in functions) {
+    const fn = functions[name]
+
+    constants.push(0x11) // load function sig
+
+    const addrBuf = Buffer.allocUnsafe(2)
+    addrBuf.writeUInt16BE(fn.address)
+
+    constants.push(addrBuf[0]) // code address
+    constants.push(addrBuf[1])
+
+    constants.push(0) // number of arguments
+    constants.push(0) // number of locals
+    constants.push(name.length) // length of name
+
+    for (c of name) constants.push(c.charCodeAt(0))
+  }
+
+  console.log(constants)
+  // TODO: clean up all this
   const t_benc = n => {
     const buf = Buffer.allocUnsafe(2)
     buf.writeUInt16BE(n)
@@ -110,7 +174,7 @@ function codegen (ast) {
 
   return {
     code: Buffer.from(code),
-    data: Buffer.from([0x0e].concat(t_benc(entry_address)).concat([0x0f, 0x00, 0x00, 0x10, 0x00, 0x00]))
+    data: Buffer.from([0x0e].concat(t_benc(entry_address)).concat([0x0f, 0x00, 0x00, 0x10]).concat(t_benc(constantCount)).concat(constants))
   }
 }
 

@@ -13,7 +13,11 @@ const map = {
   0x17: 'inc',  // increment value at top of stack by one
   0x18: 'less_than',  //  remove top two stack items--push true to stack if first-popped less than second-popped, else push false
   0x19: 'dprint',
+  0x1a: 'lstore',
+  0x1b: 'lload',
+  0x1c: 'mul',
   0x1d: 'call', // 
+  0x1e: 'return',
   0xFF: 'halt',  // stops the interpreter
 }
 
@@ -88,7 +92,11 @@ function run (code, data) {
   while (ip < code.length) {
     var currentInstruction = code[ip]
     let a, b, result
-    console.log({currentInstruction: map[currentInstruction], ip, operands, globals})
+    console.log({
+      function: callStack[callStack.length - 1].fnName,
+      currentInstruction: map[currentInstruction],
+      ip, operands, globals
+    })
     ip++
 
     switch (currentInstruction) {
@@ -182,6 +190,7 @@ function run (code, data) {
         result = a * b
         operands.push(result)
         break
+      // return
       case 0x1e:
         frame = callStack.pop()
         ip = frame.returnAddr

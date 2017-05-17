@@ -22,6 +22,7 @@ stmts
 
 stmt
 	: DPRINT exp1 SC { $$ = af.dprint($2) }
+	| RETURN exp1 SC { $$ = af.ret($2) }
 	| exp1 SC { $$ = $1 }
 	;
 
@@ -40,4 +41,5 @@ exp2
 exp3
 	: NUM {$$ = af.num($1)}
 	| LPAREN exp1 RPAREN {$$ = $2}
+	| IDENTIFIER LPAREN RPAREN { $$ = af.call($1, []) }
 	;

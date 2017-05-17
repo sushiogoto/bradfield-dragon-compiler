@@ -26,6 +26,15 @@ const af = {
         name,
         args,
         children
+    }),
+    call: (name, args) => ({
+        type: 'Call',
+        name,
+        args
+    }),
+    ret: value => ({
+        type: 'Return',
+        value
     })
 }
 
