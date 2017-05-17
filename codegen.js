@@ -13,6 +13,10 @@ function codegen (ast) {
   while (stack.length) {
     var node = stack.pop()
     switch (node.type) {
+      case 'RootNode':
+        code.unshift(0xff)
+        stack = stack.concat(node.children)
+        break
       case 'DPrint':
         code.unshift(0x19)
         stack.push(node.value)
@@ -24,6 +28,9 @@ function codegen (ast) {
             break
           case '-':
             code.unshift(0x12)
+            break
+          case '*':
+            code.unshift(0x1c)
             break
           default:
             throw new Error(`unsupported operation "${node.op}"`)

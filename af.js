@@ -1,4 +1,8 @@
 const af = {
+    root: children => ({
+        type: 'RootNode',
+        children
+    }),
     id: value => ({
         type: 'Id',
         value,
