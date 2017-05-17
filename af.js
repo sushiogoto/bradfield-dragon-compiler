@@ -1,7 +1,7 @@
 const af = {
-    root: children => ({
+    root: functions => ({
         type: 'RootNode',
-        children
+        functions
     }),
     id: value => ({
         type: 'Id',
@@ -20,6 +20,12 @@ const af = {
     dprint: value => ({
     	type: 'DPrint',
     	value
+    }),
+    fn: (name, args, children) => ({
+        type: 'FunctionNode',
+        name,
+        args,
+        children
     })
 }
 

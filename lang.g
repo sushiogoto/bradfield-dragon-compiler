@@ -3,7 +3,16 @@
 %%
 
 program
-	: stmts EOF {return af.root($1)}
+	: fns EOF {return af.root($1)}
+	;
+
+fns
+	: fn { $$ = [$1] }
+	| fns fn { $1.push($2); $$ = $1 }
+	;
+
+fn
+	: DGN IDENTIFIER LPAREN RPAREN LCURLY stmts RCURLY {$$ = af.fn($2, [], $6)}
 	;
 
 stmts
