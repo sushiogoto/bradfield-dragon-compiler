@@ -22,7 +22,7 @@ param_list
 
 params
 	: param { $$ = [$1] }
-	| params COMMA param { $1.push($2); $$ = $1 }
+	| params COMMA param { $1.push($3); $$ = $1 }
 	;
 
 param
@@ -56,5 +56,15 @@ exp3
 	: NUM {$$ = af.num($1)}
 	| IDENTIFIER { $$ = af.id($1) }
 	| LPAREN exp1 RPAREN {$$ = $2}
-	| IDENTIFIER LPAREN RPAREN { $$ = af.call($1, []) }
+	| IDENTIFIER arg_list { $$ = af.call($1, $2) }
+	;
+
+arg_list
+	: LPAREN RPAREN { $$ = [] }
+	| LPAREN args RPAREN { $$ = $2 }
+	;
+
+args
+	: exp1 { $$ = [$1] }
+	| args COMMA exp1 { $1.push($3); $$ = $1 }
 	;

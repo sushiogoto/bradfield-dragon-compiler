@@ -69,11 +69,6 @@ function codegen (ast) {
         stack.push(node.value)
         break
       case 'Call':
-        // const buf = Buffer.allocUnsafe(2)
-        // buf.writeInt16LE(node.value)
-        // code.unshift(buf[0])
-        // code.unshift(buf[1])
-
         // the function being called might not have been added to functions yet
         // so we'll just add the name here and replace it after the code has
         // been generated
@@ -81,6 +76,10 @@ function codegen (ast) {
         code.unshift(node.name)
         code.unshift(0x1d)
         position += 3
+
+        for (let i = 0; i < node.args.length; i++) {
+          stack.push(node.args[node.args.length - i - 1])
+        }
         break
       case 'Return':
         code.unshift(0x1e)
@@ -124,7 +123,7 @@ function codegen (ast) {
         const paramNumber = currentFunction.params[node.value]
 
         const buf = Buffer.allocUnsafe(2)
-        buf.writeInt16LE(node.value)
+        buf.writeInt16LE(paramNumber)
         code.unshift(buf[0])
         code.unshift(buf[1])
         code.unshift(0x1b)
@@ -149,7 +148,7 @@ function codegen (ast) {
   while (i < code.length) {
     if (typeof code[i] === 'string') {
       if (!(code[i] in functions))
-        throw new Error(`could not find symbol ${code}`)
+        throw new Error(`could not find symbol "${code[i]}"`)
       const fn = functions[code[i]]
       const buf = Buffer.allocUnsafe(2)
       buf.writeUInt16BE(fn.number)
