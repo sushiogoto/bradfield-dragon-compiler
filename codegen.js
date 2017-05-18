@@ -13,6 +13,7 @@ function codegen (ast) {
 
   const functions = Object.create(null)
   let functionCount = 0;
+  let functionStack = [];
 
   let position = 0
 
@@ -28,13 +29,21 @@ function codegen (ast) {
           position++
         }
 
+        const params = Object.create(null)
+
+        for (let i = 0; i < node.params.length; i++) {
+          params[node.params[i]] = i
+        }
+
         const fn = {
           name: node.name,
           number: functionCount++,
-          arg_count: 0,
+          arg_count: node.params.length,
+          params,
           locals_count: 0
         }
         functions[node.name] = fn
+        functionStack.push(fn)
 
         // since we're emitting bytecode in reverse
         // we're currently at the end of the function
@@ -51,7 +60,8 @@ function codegen (ast) {
         // we'll need this to be the distance from the beginning
         // so we will subtract this from the length of the buffer below this
         // while loop to get the true address
-        node.fn.positionFromEnd = position;
+        node.fn.positionFromEnd = position
+        functionStack.pop()
         break
       case 'DPrint':
         code.unshift(0x19)
@@ -98,14 +108,28 @@ function codegen (ast) {
         stack.push(node.right)
         stack.push(node.left)
         break
-      case 'Num':
+      case 'Num': {
         const buf = Buffer.allocUnsafe(2)
         buf.writeInt16LE(node.value)
         code.unshift(buf[0])
         code.unshift(buf[1])
         code.unshift(0x10)
         position += 3
-        break
+        }; break
+      case 'Id': {
+        const currentFunction = functionStack[functionStack.length - 1]
+        if (!(node.value in currentFunction.params))
+          throw new Error(`${currentFunction.name} has no parameter "${node.value}"`)
+
+        const paramNumber = currentFunction.params[node.value]
+
+        const buf = Buffer.allocUnsafe(2)
+        buf.writeInt16LE(node.value)
+        code.unshift(buf[0])
+        code.unshift(buf[1])
+        code.unshift(0x1b)
+        position += 3
+        }; break
       default:
         throw new Error(`unsupported node type "${node.type}"`)
     }
@@ -157,8 +181,8 @@ function codegen (ast) {
     constants.push(addrBuf[0]) // code address
     constants.push(addrBuf[1])
 
-    constants.push(0) // number of arguments
-    constants.push(0) // number of locals
+    constants.push(fn.arg_count) // number of arguments
+    constants.push(fn.locals_count) // number of locals
     constants.push(name.length) // length of name
 
     for (c of name) constants.push(c.charCodeAt(0))

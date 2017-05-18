@@ -12,7 +12,21 @@ fns
 	;
 
 fn
-	: DGN IDENTIFIER LPAREN RPAREN LCURLY stmts RCURLY {$$ = af.fn($2, [], $6)}
+	: DGN IDENTIFIER param_list LCURLY stmts RCURLY {$$ = af.fn($2, $3, $5)}
+	;
+
+param_list
+	: LPAREN RPAREN { $$ = [] }
+	| LPAREN params RPAREN { $$ = $2 }
+	;
+
+params
+	: param { $$ = [$1] }
+	| params COMMA param { $1.push($2); $$ = $1 }
+	;
+
+param
+	: IDENTIFIER
 	;
 
 stmts
@@ -40,6 +54,7 @@ exp2
 
 exp3
 	: NUM {$$ = af.num($1)}
+	| IDENTIFIER { $$ = af.id($1) }
 	| LPAREN exp1 RPAREN {$$ = $2}
 	| IDENTIFIER LPAREN RPAREN { $$ = af.call($1, []) }
 	;

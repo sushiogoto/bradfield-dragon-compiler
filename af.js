@@ -21,10 +21,10 @@ const af = {
     	type: 'DPrint',
     	value
     }),
-    fn: (name, args, children) => ({
+    fn: (name, params, children) => ({
         type: 'FunctionNode',
         name,
-        args,
+        params,
         children
     }),
     call: (name, args) => ({
