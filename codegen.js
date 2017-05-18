@@ -129,6 +129,17 @@ function codegen (ast) {
         code.unshift(0x1b)
         position += 3
         }; break
+      case 'ExpressionStatement':
+        // this represents a single expression in a statement
+        // where nothing is done with the return value
+        // for example, "doSomething();"
+
+        // throw away unused return value
+        code.unshift(0x1f)
+        position++
+
+        stack.push(node.value)
+        break
       default:
         throw new Error(`unsupported node type "${node.type}"`)
     }

@@ -35,6 +35,10 @@ const af = {
     ret: value => ({
         type: 'Return',
         value
+    }),
+    exprStmt: value => ({
+        type: 'ExpressionStatement',
+        value
     })
 }
 

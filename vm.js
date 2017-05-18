@@ -18,6 +18,7 @@ const map = {
   0x1c: 'mul',
   0x1d: 'call', // 
   0x1e: 'return',
+  0x1f: 'pop', // removes the value at the top of the stack
   0xFF: 'halt',  // stops the interpreter
 }
 
@@ -194,6 +195,10 @@ function run (code, data) {
       case 0x1e:
         frame = callStack.pop()
         ip = frame.returnAddr
+        break
+      // pop
+      case 0x1f:
+        operands.pop()
         break
       // halt
       case 0xFF:

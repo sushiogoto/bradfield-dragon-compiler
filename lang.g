@@ -37,7 +37,7 @@ stmts
 stmt
 	: DPRINT exp1 SC { $$ = af.dprint($2) }
 	| RETURN exp1 SC { $$ = af.ret($2) }
-	| exp1 SC { $$ = $1 }
+	| exp1 SC { $$ = af.exprStmt($1) }
 	;
 
 exp1
