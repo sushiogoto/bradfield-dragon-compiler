@@ -8,12 +8,39 @@ const uniq = (() => {
   return () => `block${counter++}`
 })()
 
+function getFunctions(ast) {
+  const constants = []
+  const functions = Object.create(null)
+
+  if (ast.type !== 'RootNode')
+    throw new Error('malformed ast')
+
+  for (let i = 0; i < ast.functions.length; i++) {
+    const node = ast.functions[i]
+
+    const fn = {
+      type: 'function',
+      name: node.name,
+      number: constants.length,
+      params: node.params,
+      locals: node.params.slice()
+    }
+
+    functions[node.name] = fn
+    constants.push(fn)
+  }
+
+  return {
+    functions,
+    constants
+  }
+}
+
 function codegen (ast) {
   var stack = [ast]
   var code = []
 
-  const constants = []
-  const functions = Object.create(null)
+  const { constants, functions } = getFunctions(ast)
   let functionStack = []
 
   const symbols = Object.create(null)
@@ -32,15 +59,11 @@ function codegen (ast) {
           position++
         }
 
-        const fn = {
-          type: 'function',
-          name: node.name,
-          number: constants.length,
-          params: node.params,
-          locals: node.params.slice()
-        }
-        functions[node.name] = fn
-        constants.push(fn)
+        const fn = functions[node.name]
+
+        if (fn.type !== 'function')
+          throw new Error('fairly certain this error is unreachable')
+
         functionStack.push(fn)
 
         // since we're emitting bytecode in reverse
@@ -66,25 +89,26 @@ function codegen (ast) {
         position++
         stack.push(node.value)
         break
-      case 'Call':
+      case 'Call': {
         code.unshift(0x1d)
         position++
 
-        // the function being called might not have been added to constants yet
-        // so we'll just add the name here and replace it after the code has
-        // been generated
-        code.unshift(0) // empty placeholder
-        code.unshift({
-          type: 'function',
-          name: node.name
-        })
+        const fn = functions[node.name]
+
+        if (fn.type !== 'function')
+          throw new Error(`could not find function ${node.name}`)
+
+        const buf = Buffer.allocUnsafe(2)
+        buf.writeInt16LE(fn.number)
+        code.unshift(buf[0])
+        code.unshift(buf[1])
         code.unshift(0x21)
         position += 3
 
         for (let i = 0; i < node.args.length; i++) {
           stack.push(node.args[node.args.length - i - 1])
         }
-        break
+      }; break
       case 'Return':
         code.unshift(0x1e)
         position++
@@ -345,22 +369,11 @@ function codegen (ast) {
     fn.address = code.length - fn.positionFromEnd
   }
 
-  // resolve function and symbol references
+  // resolve symbol references
   let i = 0;
 
   while (i < code.length) {
-    if (code[i].type === 'function') {
-      const name = code[i].name
-
-      if (!(name in functions))
-        throw new Error(`could not find function "${name}"`)
-      const fn = functions[name]
-      const buf = Buffer.allocUnsafe(2)
-      buf.writeUInt16BE(fn.number)
-      code[i] = buf[0]
-      code[i + 1] = buf[1]
-      i++
-    } else if (code[i].type === 'symbol') {
+    if (code[i].type === 'symbol') {
       const id = code[i].id
 
       if (!(id in symbols))
