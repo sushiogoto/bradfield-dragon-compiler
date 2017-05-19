@@ -162,6 +162,9 @@ function codegen (ast) {
 
         stack.push(node.value)
         break
+      case 'EmptyStatement':
+        // nothing to do
+        break
       case 'AssignmentNode': {
         const currentFunction = functionStack[functionStack.length - 1]
 
@@ -281,6 +284,12 @@ function codegen (ast) {
         code.unshift(0x15)
         position += 3
 
+        break
+      case 'BlockStatement':
+        // many languages (not ES5, though!) will create a nested lexical scope
+        // when entering a block
+        // we're not supporting that (right now)
+        stack = stack.concat(node.children)
         break
       default: console.log(node)
         throw new Error(`unsupported node type "${node.type}"`)

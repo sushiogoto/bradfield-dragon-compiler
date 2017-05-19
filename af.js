@@ -40,6 +40,9 @@ const af = {
         type: 'ExpressionStatement',
         value
     }),
+    emptyStmt: () => ({
+        type: 'EmptyStatement'
+    }),
     assign: (name, value) => ({
         type: 'AssignmentNode',
         name,
@@ -60,6 +63,10 @@ const af = {
         condition,
         consequent,
         alternate
+    }),
+    block: (children) => ({
+        type: 'BlockStatement',
+        children
     })
 }
 

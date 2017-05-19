@@ -1,5 +1,22 @@
 %parse-param af
 %start program
+
+// Since if and if-else can take any statements, and if/if-else are both
+// statements themselves, this grammar is ambiguous about situations where they
+// are combined without braces. For example, when given the string
+//
+// if (10) doA() else if (15) doB() else doC()
+//
+// "else doC()" could be paired with "if (10)" or with "if (15)". The
+// "%right" instruction below is used in combination with the "%prec"
+// instructions on the action productions to tell Jison how to resolve the
+// conflict
+//
+// I found this method at http://stackoverflow.com/questions/12731922/reforming-the-grammar-to-remove-shift-reduce-conflict-in-if-then-else/12734499#12734499
+//
+// This specific problem is actually mentioned in the dragon book, in
+// section4.3.2
+%right THEN ELSE
 %%
 
 program
@@ -37,10 +54,12 @@ stmts
 stmt
 	: DPRINT exp0 SC { $$ = af.dprint($2) }
 	| RETURN exp0 SC { $$ = af.ret($2) }
-	| IF LPAREN exp0 RPAREN LCURLY stmts RCURLY { $$ = af.if($3, $6) }
-	| IF LPAREN exp0 RPAREN LCURLY stmts RCURLY ELSE LCURLY stmts RCURLY { $$ = af.ifElse($3, $6, $10) }
-	| WHILE LPAREN exp0 RPAREN LCURLY stmts RCURLY { $$ = af.while($3, $6) }
+	| IF LPAREN exp0 RPAREN stmt   %prec THEN { $$ = af.if($3, $5) }
+	| IF LPAREN exp0 RPAREN stmt ELSE stmt   %prec ELSE { $$ = af.ifElse($3, $5, $7) }
+	| WHILE LPAREN exp0 RPAREN stmt { $$ = af.while($3, $5) }
 	| exp0 SC { $$ = af.exprStmt($1) }
+	| LCURLY stmts RCURLY { $$ = af.block($2) }
+	| SC { $$ = af.emptyStmt() }
 	;
 
 exp0
