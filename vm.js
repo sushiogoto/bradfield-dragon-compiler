@@ -84,7 +84,7 @@ function load_consts (buf, n, i = 0) {
   return [constants, i]
 }
 
-function run (code, data) {
+function run (code, data, trace) {
   let { entry_address, globals_count, constants } = load_data(data)
   let globals = new Array(globals_count)
   var operands = []
@@ -94,11 +94,15 @@ function run (code, data) {
   while (ip < code.length) {
     var currentInstruction = code[ip]
     let a, b, result
-    console.log({
-      function: callStack[callStack.length - 1].fnName,
-      currentInstruction: map[currentInstruction],
-      ip, operands, globals, locals: callStack[callStack.length - 1].locals
-    })
+
+    if (trace) {
+      console.log({
+        function: callStack[callStack.length - 1].fnName,
+        currentInstruction: map[currentInstruction],
+        ip, operands, globals, locals: callStack[callStack.length - 1].locals
+      })
+    }
+
     ip++
 
     switch (currentInstruction) {
@@ -216,8 +220,10 @@ function run (code, data) {
         break
       // halt
       case 0xFF:
-        console.log(operands)
-        console.log(globals)
+        if (trace) {
+          console.log(operands)
+          console.log(globals)
+        }
         return
       default:
         throw new Error(`invalid operation ${currentInstruction.toString(16)}`)

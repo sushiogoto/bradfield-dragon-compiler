@@ -20,8 +20,7 @@ function codegen (ast) {
   let functionCount = 0
   let functionStack = []
 
-  // TODO: perhaps this can be generalized
-  const whiles = Object.create(null)
+  const symbols = Object.create(null)
 
   let position = 0
 
@@ -197,13 +196,13 @@ function codegen (ast) {
         const whileEndId = uniq()
         const whileStartId = uniq()
 
-        whiles[whileEndId] = position
+        symbols[whileEndId] = position
 
         // we don't know the address of the start of the while loop yet
         // so we'll use a placeholder value to represent it
         code.unshift(0) // empty placeholder
         code.unshift({
-          type: 'while',
+          type: 'symbol',
           id: whileStartId
         })
         code.unshift(0x15)
@@ -228,7 +227,7 @@ function codegen (ast) {
         // so we'll use a placeholder value to represent it
         code.unshift(0) // empty placeholder
         code.unshift({
-          type: 'while',
+          type: 'symbol',
           id: node.end
         })
         code.unshift(0x16)
@@ -237,7 +236,7 @@ function codegen (ast) {
         break
       case 'EndWhile':
         // distance of the beginning of the while from the end of the code
-        whiles[node.start] = position
+        symbols[node.start] = position
 
         break
       default: console.log(node)
@@ -252,8 +251,7 @@ function codegen (ast) {
     fn.address = code.length - fn.positionFromEnd
   }
 
-  // TODO: need to make it explicit these are function symbols
-  // resolve symbol references
+  // resolve function and symbol references
   let i = 0;
 
   while (i < code.length) {
@@ -268,13 +266,13 @@ function codegen (ast) {
       code[i] = buf[0]
       code[i + 1] = buf[1]
       i++
-    } else if (code[i].type === 'while') {
+    } else if (code[i].type === 'symbol') {
       const id = code[i].id
 
-      if (!(id in whiles))
+      if (!(id in symbols))
         throw new Error(`could not find symbol "${id}"`)
 
-      const address = code.length - whiles[id]
+      const address = code.length - symbols[id]
 
       const buf = Buffer.allocUnsafe(2)
       buf.writeUInt16BE(address)
