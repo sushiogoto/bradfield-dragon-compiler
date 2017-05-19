@@ -27,9 +27,9 @@ const af = {
         params,
         children
     }),
-    call: (name, args) => ({
+    call: (fn, args) => ({
         type: 'Call',
-        name,
+        fn,
         args
     }),
     ret: value => ({

@@ -93,21 +93,12 @@ function codegen (ast) {
         code.unshift(0x1d)
         position++
 
-        const fn = functions[node.name]
-
-        if (fn.type !== 'function')
-          throw new Error(`could not find function ${node.name}`)
-
-        const buf = Buffer.allocUnsafe(2)
-        buf.writeInt16LE(fn.number)
-        code.unshift(buf[0])
-        code.unshift(buf[1])
-        code.unshift(0x21)
-        position += 3
-
         for (let i = 0; i < node.args.length; i++) {
           stack.push(node.args[node.args.length - i - 1])
         }
+
+        stack.push(node.fn)
+
       }; break
       case 'Return':
         code.unshift(0x1e)
