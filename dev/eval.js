@@ -2,6 +2,8 @@
 # test/debug the code generator
 $ node dev/eval.js <<< 'dprint 1 + 3 - 2;'
 2
+
+specify '--trace' or '-t' to enable tracing output
 */
 
 const fs = require('fs')

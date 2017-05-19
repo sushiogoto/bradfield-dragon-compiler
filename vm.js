@@ -145,7 +145,7 @@ function run (code, data, trace) {
       case 0x16:
         a = operands.pop()
         b = code.slice(ip, ip += 2).readUInt16BE()
-        if (a === false) {
+        if (a == false) { // allow "falsy" values (for example, 0)
           ip = b
         }
         break

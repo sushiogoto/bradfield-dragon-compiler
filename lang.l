@@ -16,6 +16,7 @@ dgn                    return 'DGN'
 dprint                 return 'DPRINT'
 return                 return 'RETURN'
 while                  return 'WHILE'
+if                     return 'IF'
 
 [_a-zA-Z][_a-zA-Z0-9]* return 'IDENTIFIER'
 \<                     return 'LT'

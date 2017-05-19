@@ -239,6 +239,29 @@ function codegen (ast) {
         symbols[node.start] = position
 
         break
+      case 'IfNode':
+        const ifEndId = uniq()
+
+        symbols[ifEndId] = position
+
+        // add phony node to emit if conditional jump
+        stack = stack.concat(node.condition).concat({
+          type: 'IfConditionalJump',
+          end: ifEndId
+        }).concat(node.children)
+        break
+      case 'IfConditionalJump':
+        // we don't know the address of the end of the while loop yet
+        // so we'll use a placeholder value to represent it
+        code.unshift(0) // empty placeholder
+        code.unshift({
+          type: 'symbol',
+          id: node.end
+        })
+        code.unshift(0x16)
+        position += 3
+
+        break
       default: console.log(node)
         throw new Error(`unsupported node type "${node.type}"`)
     }

@@ -49,6 +49,11 @@ const af = {
         type: 'WhileNode',
         condition,
         children
+    }),
+    if: (condition, children) => ({
+        type: 'IfNode',
+        condition,
+        children
     })
 }
 
