@@ -2,7 +2,7 @@ const { map, load_data } = require('./vm');
 
 const opsWithImmediates = new Set([
   'push', 'gstore', 'gload', 'jump', 'jump_if_false', 'lstore', 'lload',
-  'call'
+  'call', 'lconstant'
 ])
 
 const jumpOps = new Set([
@@ -32,6 +32,10 @@ function disassemble (code, dataBuf) {
       case 0x11:
         functions[constant.address] = constant.name
         args = ['function', constant.name, constant.arg_count, constant.locals_count]
+        break
+      case 0x12:
+        // functions[constant.address] = constant.name
+        args = ['string', constant.value]
         break
       default:
         throw new Error(`unknown constant type ${constant.type.toString(16)}`)
@@ -78,6 +82,11 @@ function disassemble (code, dataBuf) {
     switch (opName) {
       case 'call':
         line.annotation = data.constants[immediate].name || '??'
+        break
+      case 'lconstant':
+        const constant = data.constants[immediate]
+        if (constant.type === 0x12) // string
+          line.annotation = `'${constant.value}'`
         break
     }
 

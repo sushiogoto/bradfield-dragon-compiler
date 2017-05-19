@@ -20,6 +20,7 @@ const map = {
   0x1e: 'return',
   0x1f: 'pop', // removes the value at the top of the stack
   0x20: 'div', // these are disturbingly out of order
+  0x21: 'lconstant', // pushes the nth constant onto the stack
   0xFF: 'halt',  // stops the interpreter
 }
 
@@ -75,6 +76,13 @@ function load_consts (buf, n, i = 0) {
         record.locals_count =  buf[i]; i += 1
         len = buf[i]; i += 1
         record.name = buf.slice(i, i + len).toString('utf8'); i += len
+        constants.push(record)
+        break;
+      // load string constant
+      case 0x12:
+        record.type = type_byte
+        len = buf[i]; i += 1
+        record.value = buf.slice(i, i + len).toString('utf8'); i += len
         constants.push(record)
         break;
       default:
@@ -217,6 +225,15 @@ function run (code, data, trace) {
       // pop
       case 0x1f:
         operands.pop()
+        break
+      // lconstant
+      case 0x21:
+        a = code.slice(ip, ip + 2).readInt16BE()
+        ip += 2
+        let constant = constants[a]
+        if (constant.type === 0x12)
+          constant = constant.value
+        operands.push(constant)
         break
       // halt
       case 0xFF:

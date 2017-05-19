@@ -3,10 +3,6 @@
 // so if you read the generated code left to right, it looks like the
 // result of a postorder (right to left) traversal
 
-// also, this generator doesn't know anything about functions,
-// you could say it thinks all that exists is the body of a "main"
-// function that calls no other functions
-
 const uniq = (() => {
   let counter = 0
   return () => `block${counter++}`
@@ -16,8 +12,8 @@ function codegen (ast) {
   var stack = [ast]
   var code = []
 
+  const constants = []
   const functions = Object.create(null)
-  let functionCount = 0
   let functionStack = []
 
   const symbols = Object.create(null)
@@ -37,12 +33,14 @@ function codegen (ast) {
         }
 
         const fn = {
+          type: 'function',
           name: node.name,
-          number: functionCount++,
+          number: constants.length,
           params: node.params,
           locals: node.params.slice()
         }
         functions[node.name] = fn
+        constants.push(fn)
         functionStack.push(fn)
 
         // since we're emitting bytecode in reverse
@@ -69,7 +67,7 @@ function codegen (ast) {
         stack.push(node.value)
         break
       case 'Call':
-        // the function being called might not have been added to functions yet
+        // the function being called might not have been added to constants yet
         // so we'll just add the name here and replace it after the code has
         // been generated
         code.unshift(0) // empty placeholder
@@ -291,6 +289,23 @@ function codegen (ast) {
         // we're not supporting that (right now)
         stack = stack.concat(node.children)
         break
+      case 'String': {
+        const number = constants.length;
+
+        const str = {
+          type: 'string',
+          number,
+          value: node.value
+        }
+        constants.push(str)
+
+        const buf = Buffer.allocUnsafe(2)
+        buf.writeInt16LE(number)
+        code.unshift(buf[0])
+        code.unshift(buf[1])
+        code.unshift(0x21)
+        position += 3
+      }; break
       default: console.log(node)
         throw new Error(`unsupported node type "${node.type}"`)
     }
@@ -341,26 +356,36 @@ function codegen (ast) {
 
   // { entry_address, globals_count, constants }
   const entry_address = functions['main'].address
-  const constantCount = functionCount
 
-  const constants = []
+  const constantsCode = []
 
-  for (name in functions) {
-    const fn = functions[name]
+  for (let i = 0; i < constants.length; i++) {
+    const constant = constants[i]
 
-    constants.push(0x11) // load function sig
+    switch (constant.type) {
+      case 'function': {
+        constantsCode.push(0x11) // load function sig
 
-    const addrBuf = Buffer.allocUnsafe(2)
-    addrBuf.writeUInt16BE(fn.address)
+        const addrBuf = Buffer.allocUnsafe(2)
+        addrBuf.writeUInt16BE(constant.address)
 
-    constants.push(addrBuf[0]) // code address
-    constants.push(addrBuf[1])
+        constantsCode.push(addrBuf[0]) // code address
+        constantsCode.push(addrBuf[1])
 
-    constants.push(fn.params.length) // number of arguments
-    constants.push(fn.locals.length) // number of locals
-    constants.push(name.length) // length of name
+        constantsCode.push(constant.params.length) // number of arguments
+        constantsCode.push(constant.locals.length) // number of locals
+        constantsCode.push(constant.name.length) // length of name
 
-    for (c of name) constants.push(c.charCodeAt(0))
+        for (c of constant.name) constantsCode.push(c.charCodeAt(0))
+        }; break
+      case 'string': {
+        constantsCode.push(0x12) // load function sig
+        constantsCode.push(constant.value.length) // length of name
+        for (c of constant.value) constantsCode.push(c.charCodeAt(0))
+        }; break
+      default:
+        throw new Error(`unrecognized constant type "${constant.type}"`)
+    }
   }
 
   // TODO: clean up all this
@@ -372,7 +397,7 @@ function codegen (ast) {
 
   return {
     code: Buffer.from(code),
-    data: Buffer.from([0x0e].concat(t_benc(entry_address)).concat([0x0f, 0x00, 0x00, 0x10]).concat(t_benc(constantCount)).concat(constants))
+    data: Buffer.from([0x0e].concat(t_benc(entry_address)).concat([0x0f, 0x00, 0x00, 0x10]).concat(t_benc(constants.length)).concat(constantsCode))
   }
 }
 

@@ -86,6 +86,7 @@ exp2
 
 exp3
 	: NUM {$$ = af.num($1)}
+	| STRING { $$ = af.string($1.slice(1, $1.length - 1)) }
 	| IDENTIFIER { $$ = af.id($1) }
 	| LPAREN exp0 RPAREN {$$ = $2}
 	| IDENTIFIER arg_list { $$ = af.call($1, $2) }

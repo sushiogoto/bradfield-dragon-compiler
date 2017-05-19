@@ -67,6 +67,10 @@ const af = {
     block: (children) => ({
         type: 'BlockStatement',
         children
+    }),
+    string: value => ({
+        type: 'String',
+        value,
     })
 }
 
