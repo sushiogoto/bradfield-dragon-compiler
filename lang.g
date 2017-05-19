@@ -37,6 +37,7 @@ stmts
 stmt
 	: DPRINT exp0 SC { $$ = af.dprint($2) }
 	| RETURN exp0 SC { $$ = af.ret($2) }
+	| WHILE LPAREN exp0 RPAREN LCURLY stmts RCURLY { $$ = af.while($3, $6) }
 	| exp0 SC { $$ = af.exprStmt($1) }
 	;
 

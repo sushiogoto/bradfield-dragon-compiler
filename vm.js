@@ -97,7 +97,7 @@ function run (code, data) {
     console.log({
       function: callStack[callStack.length - 1].fnName,
       currentInstruction: map[currentInstruction],
-      ip, operands, globals
+      ip, operands, globals, locals: callStack[callStack.length - 1].locals
     })
     ip++
 

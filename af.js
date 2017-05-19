@@ -44,6 +44,11 @@ const af = {
         type: 'AssignmentNode',
         name,
         value
+    }),
+    while: (condition, children) => ({
+        type: 'WhileNode',
+        condition,
+        children
     })
 }
 

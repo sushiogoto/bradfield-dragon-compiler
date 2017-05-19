@@ -7,13 +7,21 @@
 // you could say it thinks all that exists is the body of a "main"
 // function that calls no other functions
 
+const uniq = (() => {
+  let counter = 0
+  return () => `block${counter++}`
+})()
+
 function codegen (ast) {
   var stack = [ast]
   var code = []
 
   const functions = Object.create(null)
-  let functionCount = 0;
-  let functionStack = [];
+  let functionCount = 0
+  let functionStack = []
+
+  // TODO: perhaps this can be generalized
+  const whiles = Object.create(null)
 
   let position = 0
 
@@ -49,7 +57,7 @@ function codegen (ast) {
         }).concat(node.children)
         break
       case 'EndFunction':
-        // this is the distance from the end of the function
+        // this is the distance from the end of the code
         // we'll need this to be the distance from the beginning
         // so we will subtract this from the length of the buffer below this
         // while loop to get the true address
@@ -65,8 +73,11 @@ function codegen (ast) {
         // the function being called might not have been added to functions yet
         // so we'll just add the name here and replace it after the code has
         // been generated
-        code.unshift(0)
-        code.unshift(node.name)
+        code.unshift(0) // empty placeholder
+        code.unshift({
+          type: 'function',
+          name: node.name
+        })
         code.unshift(0x1d)
         position += 3
 
@@ -182,7 +193,54 @@ function codegen (ast) {
 
         stack.push(node.value)
       }; break
-      default:
+      case 'WhileNode':
+        const whileEndId = uniq()
+        const whileStartId = uniq()
+
+        whiles[whileEndId] = position
+
+        // we don't know the address of the start of the while loop yet
+        // so we'll use a placeholder value to represent it
+        code.unshift(0) // empty placeholder
+        code.unshift({
+          type: 'while',
+          id: whileStartId
+        })
+        code.unshift(0x15)
+        position += 3
+
+        // add phony nodes
+        // one will emit while conditional jump
+        // and the other will set the beginning position
+        // for the above instruction to jump to
+        stack = stack.concat({
+          type: 'EndWhile',
+          start: whileStartId,
+          end: whileEndId
+        }).concat(node.condition).concat({
+          type: 'WhileConditionalJump',
+          start: whileStartId,
+          end: whileEndId
+        }).concat(node.children)
+        break
+      case 'WhileConditionalJump':
+        // we don't know the address of the end of the while loop yet
+        // so we'll use a placeholder value to represent it
+        code.unshift(0) // empty placeholder
+        code.unshift({
+          type: 'while',
+          id: node.end
+        })
+        code.unshift(0x16)
+        position += 3
+
+        break
+      case 'EndWhile':
+        // distance of the beginning of the while from the end of the code
+        whiles[node.start] = position
+
+        break
+      default: console.log(node)
         throw new Error(`unsupported node type "${node.type}"`)
     }
   }
@@ -199,12 +257,27 @@ function codegen (ast) {
   let i = 0;
 
   while (i < code.length) {
-    if (typeof code[i] === 'string') {
-      if (!(code[i] in functions))
-        throw new Error(`could not find symbol "${code[i]}"`)
-      const fn = functions[code[i]]
+    if (code[i].type === 'function') {
+      const name = code[i].name
+
+      if (!(name in functions))
+        throw new Error(`could not find function "${name}"`)
+      const fn = functions[name]
       const buf = Buffer.allocUnsafe(2)
       buf.writeUInt16BE(fn.number)
+      code[i] = buf[0]
+      code[i + 1] = buf[1]
+      i++
+    } else if (code[i].type === 'while') {
+      const id = code[i].id
+
+      if (!(id in whiles))
+        throw new Error(`could not find symbol "${id}"`)
+
+      const address = code.length - whiles[id]
+
+      const buf = Buffer.allocUnsafe(2)
+      buf.writeUInt16BE(address)
       code[i] = buf[0]
       code[i + 1] = buf[1]
       i++
