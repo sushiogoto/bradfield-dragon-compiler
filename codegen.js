@@ -178,27 +178,39 @@ function codegen (ast) {
       case 'Id': {
         const currentFunction = functionStack[functionStack.length - 1]
 
-        // since we're generating code in reverse, variable lookups happen
-        // before they're defined
-        // the only way I can think to validate that variables are declared
-        // before use is to do two passes over the AST
-        // and that probably belongs in semantic analysis, so we will assume
-        // any variable references we encounter are valid, and add them to the
-        // list of locals
+        // handle root-level function lookups
+        if (node.value in functions) {
+          const fn = functions[node.value]
 
-        let paramNumber = currentFunction.locals.indexOf(node.value)
+          const buf = Buffer.allocUnsafe(2)
+          buf.writeInt16LE(fn.number)
+          code.unshift(buf[0])
+          code.unshift(buf[1])
+          code.unshift(0x21)
+          position += 3
+        } else {
+          // since we're generating code in reverse, variable lookups happen
+          // before they're defined
+          // the only way I can think to validate that variables are declared
+          // before use is to do two passes over the AST
+          // and that probably belongs in semantic analysis, so we will assume
+          // any variable references we encounter are valid, and add them to the
+          // list of locals
 
-        if (paramNumber < 0) {
-          paramNumber = currentFunction.locals.length
-          currentFunction.locals.push(node.value)
+          let paramNumber = currentFunction.locals.indexOf(node.value)
+
+          if (paramNumber < 0) {
+            paramNumber = currentFunction.locals.length
+            currentFunction.locals.push(node.value)
+          }
+
+          const buf = Buffer.allocUnsafe(2)
+          buf.writeInt16LE(paramNumber)
+          code.unshift(buf[0])
+          code.unshift(buf[1])
+          code.unshift(0x1b)
+          position += 3
         }
-
-        const buf = Buffer.allocUnsafe(2)
-        buf.writeInt16LE(paramNumber)
-        code.unshift(buf[0])
-        code.unshift(buf[1])
-        code.unshift(0x1b)
-        position += 3
       }; break
       case 'ExpressionStatement':
         // this represents a single expression in a statement

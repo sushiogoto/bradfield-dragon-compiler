@@ -212,7 +212,12 @@ function run (code, data, trace) {
         break
       // dprint
       case 0x19:
-        console.log(operands.pop())
+        const val = operands.pop()
+
+        if (val.type === 0x11)
+          console.log(`[[ function ${val.name}() ]]`)
+        else
+          console.log(val)
         break
       // call 
       // tries to call the value at the top of the stack
