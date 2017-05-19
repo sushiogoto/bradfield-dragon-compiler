@@ -19,6 +19,7 @@ const map = {
   0x1d: 'call', // 
   0x1e: 'return',
   0x1f: 'pop', // removes the value at the top of the stack
+  0x20: 'div', // these are disturbingly out of order
   0xFF: 'halt',  // stops the interpreter
 }
 
@@ -195,6 +196,13 @@ function run (code, data) {
         a = operands.pop()
         b = operands.pop()
         result = a * b
+        operands.push(result)
+        break
+      // mult
+      case 0x20:
+        a = operands.pop()
+        b = operands.pop()
+        result = a / b
         operands.push(result)
         break
       // return

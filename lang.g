@@ -41,8 +41,13 @@ stmt
 	;
 
 exp0
-	: exp1
+	: logical_exp
 	| IDENTIFIER ASSIGN exp0 { $$ = af.assign($1, $3) }
+	;
+
+logical_exp
+	: exp1
+	| logical_exp LT exp1 { $$ = af.op($2, $1, $3) }
 	;
 
 exp1
