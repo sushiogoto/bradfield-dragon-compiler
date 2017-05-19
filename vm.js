@@ -21,6 +21,12 @@ const map = {
   0x1f: 'pop', // removes the value at the top of the stack
   0x20: 'div', // these are disturbingly out of order
   0x21: 'lconstant', // pushes the nth constant onto the stack
+  0x22: 'greater_than',
+  0x23: 'less_than_equal',
+  0x24: 'greater_than_equal',
+  0x25: 'and',
+  0x26: 'mod',
+  0x27: 'equals',
   0xFF: 'halt',  // stops the interpreter
 }
 
@@ -167,6 +173,42 @@ function run (code, data, trace) {
         a = operands.pop()
         b = operands.pop()
         operands.push(a < b)
+        break
+      // less_than
+      case 0x22:
+        a = operands.pop()
+        b = operands.pop()
+        operands.push(a > b)
+        break
+      // less_than
+      case 0x23:
+        a = operands.pop()
+        b = operands.pop()
+        operands.push(a <= b)
+        break
+      // less_than
+      case 0x24:
+        a = operands.pop()
+        b = operands.pop()
+        operands.push(a >= b)
+        break
+      // equals
+      case 0x27:
+        a = operands.pop()
+        b = operands.pop()
+        operands.push(a === b)
+        break
+      // logical and
+      case 0x25:
+        a = operands.pop()
+        b = operands.pop()
+        operands.push(a && b)
+        break
+      // modulus
+      case 0x26:
+        a = operands.pop()
+        b = operands.pop()
+        operands.push(a % b)
         break
       // dprint
       case 0x19:

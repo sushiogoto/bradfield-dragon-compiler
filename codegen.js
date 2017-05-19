@@ -109,6 +109,30 @@ function codegen (ast) {
             code.unshift(0x18)
             position++
             break
+          case '>':
+            code.unshift(0x22)
+            position++
+            break
+          case '<=':
+            code.unshift(0x23)
+            position++
+            break
+          case '>=':
+            code.unshift(0x24)
+            position++
+            break
+          case '==':
+            code.unshift(0x27)
+            position++
+            break
+          case '&&':
+            code.unshift(0x25)
+            position++
+            break
+          case '%':
+            code.unshift(0x26)
+            position++
+            break
           default:
             throw new Error(`unsupported operation "${node.op}"`)
         }

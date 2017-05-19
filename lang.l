@@ -10,7 +10,6 @@
 \(                     return 'LPAREN'
 \)                     return 'RPAREN'
 \;                     return 'SC'
-\=                     return 'ASSIGN'
 
 dgn                    return 'DGN'
 dprint                 return 'DPRINT'
@@ -20,7 +19,19 @@ if                     return 'IF'
 else                   return 'ELSE'
 
 [_a-zA-Z][_a-zA-Z0-9]* return 'IDENTIFIER'
+
+\=\=                   return 'EQ'
+\<\=                   return 'LTE'
+\>\=                   return 'GTE'
 \<                     return 'LT'
+\>                     return 'GT'
+
+\=                     return 'ASSIGN'
+
+\%                     return 'MOD'
+
+\&\&                   return 'AND'
+
 \{                     return 'LCURLY'
 \}                     return 'RCURLY'
 \'[^']*\'              return 'STRING'

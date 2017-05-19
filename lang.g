@@ -63,13 +63,26 @@ stmt
 	;
 
 exp0
-	: logical_exp
-	| IDENTIFIER ASSIGN exp0 { $$ = af.assign($1, $3) }
+	: and
+	| IDENTIFIER ASSIGN and { $$ = af.assign($1, $3) }
 	;
 
-logical_exp
+and
+	: comparison
+	| and AND comparison { $$ = af.op($2, $1, $3) }
+	;
+
+comparison
+	: inequality
+	| comparison EQ inequality { $$ = af.op($2, $1, $3) }
+	;
+
+inequality
 	: exp1
-	| logical_exp LT exp1 { $$ = af.op($2, $1, $3) }
+	| inequality LT exp1 { $$ = af.op($2, $1, $3) }
+	| inequality GT exp1 { $$ = af.op($2, $1, $3) }
+	| inequality LTE exp1 { $$ = af.op($2, $1, $3) }
+	| inequality GTE exp1 { $$ = af.op($2, $1, $3) }
 	;
 
 exp1
@@ -80,8 +93,9 @@ exp1
 
 exp2
 	: exp3
-	| exp2 DIV exp3 { $$ = af.op($2, $1, $3)}
 	| exp2 MUL exp3 { $$ = af.op($2, $1, $3)} 
+	| exp2 DIV exp3 { $$ = af.op($2, $1, $3)}
+	| exp2 MOD exp3 { $$ = af.op($2, $1, $3)}
 	;
 
 exp3
