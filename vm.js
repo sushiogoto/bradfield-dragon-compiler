@@ -88,7 +88,7 @@ function run (code, data) {
   let globals = new Array(globals_count)
   var operands = []
   var ip = entry_address
-  let callStack = [{fnName: 'main'}]
+  let callStack = [{fnName: 'main', locals: []}]
 
   while (ip < code.length) {
     var currentInstruction = code[ip]

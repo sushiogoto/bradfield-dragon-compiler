@@ -29,18 +29,11 @@ function codegen (ast) {
           position++
         }
 
-        const params = Object.create(null)
-
-        for (let i = 0; i < node.params.length; i++) {
-          params[node.params[i]] = i
-        }
-
         const fn = {
           name: node.name,
           number: functionCount++,
-          arg_count: node.params.length,
-          params,
-          locals_count: 0
+          params: node.params,
+          locals: node.params.slice()
         }
         functions[node.name] = fn
         functionStack.push(fn)
@@ -117,10 +110,21 @@ function codegen (ast) {
       }; break
       case 'Id': {
         const currentFunction = functionStack[functionStack.length - 1]
-        if (!(node.value in currentFunction.params))
-          throw new Error(`${currentFunction.name} has no variable "${node.value}"`)
 
-        const paramNumber = currentFunction.params[node.value]
+        // since we're generating code in reverse, variable lookups happen
+        // before they're defined
+        // the only way I can think to validate that variables are declared
+        // before use is to do two passes over the AST
+        // and that probably belongs in semantic analysis, so we will assume
+        // any variable references we encounter are valid, and add them to the
+        // list of locals
+
+        let paramNumber = currentFunction.locals.indexOf(node.value)
+
+        if (paramNumber < 0) {
+          paramNumber = currentFunction.locals.length
+          currentFunction.locals.push(node.value)
+        }
 
         const buf = Buffer.allocUnsafe(2)
         buf.writeInt16LE(paramNumber)
@@ -142,12 +146,13 @@ function codegen (ast) {
         break
       case 'AssignmentNode': {
         const currentFunction = functionStack[functionStack.length - 1]
-        if (!(node.name in currentFunction.params))
-          throw new Error(`${currentFunction.name} has no variable "${node.value}"`)
 
-        const paramNumber = currentFunction.params[node.name]
+        let paramNumber = currentFunction.locals.indexOf(node.name)
 
-        // console.log('assigning to', node.name, paramNumber)
+        if (paramNumber < 0) {
+          paramNumber = currentFunction.locals.length
+          currentFunction.locals.push(node.name)
+        }
 
         const buf = Buffer.allocUnsafe(2)
         buf.writeInt16LE(paramNumber)
@@ -220,8 +225,8 @@ function codegen (ast) {
     constants.push(addrBuf[0]) // code address
     constants.push(addrBuf[1])
 
-    constants.push(fn.arg_count) // number of arguments
-    constants.push(fn.locals_count) // number of locals
+    constants.push(fn.params.length) // number of arguments
+    constants.push(fn.locals.length) // number of locals
     constants.push(name.length) // length of name
 
     for (c of name) constants.push(c.charCodeAt(0))
