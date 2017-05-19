@@ -215,10 +215,11 @@ function run (code, data, trace) {
         console.log(operands.pop())
         break
       // call 
-      // takes in an unsigned integer that is index in consts array
+      // tries to call the value at the top of the stack
       case 0x1d: {
-        let index = code.slice(ip, ip += 2).readUInt16BE()
-        let fSig = constants[index]
+        let fSig = operands.pop()
+        if (!fSig || fSig.type !== 0x11)
+          throw new Error(`${fSig} is not a function`)
         let locals = []
         for(let j=0; j < fSig.arg_count; j++){
           locals.push(operands.pop())

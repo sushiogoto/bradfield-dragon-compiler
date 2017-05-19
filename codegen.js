@@ -67,6 +67,9 @@ function codegen (ast) {
         stack.push(node.value)
         break
       case 'Call':
+        code.unshift(0x1d)
+        position++
+
         // the function being called might not have been added to constants yet
         // so we'll just add the name here and replace it after the code has
         // been generated
@@ -75,7 +78,7 @@ function codegen (ast) {
           type: 'function',
           name: node.name
         })
-        code.unshift(0x1d)
+        code.unshift(0x21)
         position += 3
 
         for (let i = 0; i < node.args.length; i++) {

@@ -2,7 +2,7 @@ const { map, load_data } = require('./vm');
 
 const opsWithImmediates = new Set([
   'push', 'gstore', 'gload', 'jump', 'jump_if_false', 'lstore', 'lload',
-  'call', 'lconstant'
+  'lconstant'
 ])
 
 const jumpOps = new Set([
@@ -80,11 +80,10 @@ function disassemble (code, dataBuf) {
       line.immediate = immediate
 
     switch (opName) {
-      case 'call':
-        line.annotation = data.constants[immediate].name || '??'
-        break
       case 'lconstant':
         const constant = data.constants[immediate]
+        if (constant.type === 0x11) // function
+          line.annotation = `${constant.name}()`
         if (constant.type === 0x12) // string
           line.annotation = `'${constant.value}'`
         break
