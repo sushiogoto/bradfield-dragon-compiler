@@ -17,7 +17,7 @@ const lines = disassemble(code, data)
 lines.forEach(line => {
   switch (line.type) {
     case 'Operation':
-      let str = `\t${line.value} ${line.args.join(' ')}`
+      let str = `\t${line.value} ${line.immediate || ''}`
       if (line.annotation)
         str += `\t# ${line.annotation}`
       console.log(str)

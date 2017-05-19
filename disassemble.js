@@ -5,16 +5,23 @@ const opsWithImmediates = new Set([
   'call'
 ])
 
+const jumpOps = new Set([
+  'jump', 'jump_if_false'
+])
+
 const constantTypes = {
   0x11: 'function'
 }
+
+const blockLabel = block => `_${block.function}_block${block.number}`;
 
 function disassemble (code, dataBuf) {
   const data = load_data(dataBuf)
 
   const functions = {}
+  const blockAddresses = new Set()
 
-  const lines = [];
+  const firstPass = [];
 
   for (let i = 0; i < data.constants.length; i++) {
     const constant = data.constants[i]
@@ -30,7 +37,7 @@ function disassemble (code, dataBuf) {
         throw new Error(`unknown constant type ${constant.type.toString(16)}`)
     }
 
-    lines.push({
+    firstPass.push({
       type: 'Directive',
       value: 'constant',
       args
@@ -40,29 +47,33 @@ function disassemble (code, dataBuf) {
   let i = 0;
   while (i < code.length) {
     if (functions.hasOwnProperty(i))
-      lines.push({
+      firstPass.push({
         type: 'Label',
         value: functions[i]
       })
 
     const op = code[i++];
     const opName = map[op];
-    const inst = []
 
     let immediate
 
     if (opsWithImmediates.has(opName)) {
       immediate = code.slice(i, i + 2).readUInt16BE()
       i += 2
+    }
 
-      inst.push(immediate)
+    if (jumpOps.has(opName)) {
+      blockAddresses.add(immediate)
     }
 
     const line = {
       type: 'Operation',
       value: opName,
-      args: inst
+      address: i
     }
+
+    if (immediate)
+      line.immediate = immediate
 
     switch (opName) {
       case 'call':
@@ -70,10 +81,56 @@ function disassemble (code, dataBuf) {
         break
     }
 
-    lines.push(line)
+    firstPass.push(line)
   }
 
-  return lines
+  const orderedBlockAddresses = Array.from(blockAddresses).sort((a, b) => a - b);
+
+  const functionsArray = []
+
+  for (address in functions) {
+    functionsArray.push({
+      address: Number(address),
+      name: functions[address]
+    })
+  }
+
+  let functionIter = 0;
+  let localBlockCount = 0;
+
+  let blocks = {};
+
+  for (let i = 0; i < orderedBlockAddresses.length; i++) {
+    const block = orderedBlockAddresses[i];
+    while (functionIter + 1 < functionsArray.length && block >= functionsArray[functionIter + 1].address) {
+      functionIter++
+      localBlockCount = 0
+    }
+
+    blocks[block] = {
+      function: functionsArray[functionIter].name,
+      number: localBlockCount++
+    }
+  }
+
+  const secondPass = []
+
+  for (let i = 0; i < firstPass.length; i++) {
+    const instruction = firstPass[i]
+
+    if (blocks.hasOwnProperty(instruction.immediate))
+      instruction.immediate = blockLabel(blocks[instruction.immediate])
+
+    secondPass.push(instruction)
+
+    if (blocks.hasOwnProperty(instruction.address))
+      secondPass.push({
+        type: 'Label',
+        value: blockLabel(blocks[instruction.address])
+      })
+  }
+
+  return secondPass
 }
 
 module.exports = disassemble
