@@ -39,6 +39,11 @@ const af = {
     exprStmt: value => ({
         type: 'ExpressionStatement',
         value
+    }),
+    assign: (name, value) => ({
+        type: 'AssignmentNode',
+        name,
+        value
     })
 }
 

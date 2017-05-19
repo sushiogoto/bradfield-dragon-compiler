@@ -35,9 +35,14 @@ stmts
 	;
 
 stmt
-	: DPRINT exp1 SC { $$ = af.dprint($2) }
-	| RETURN exp1 SC { $$ = af.ret($2) }
-	| exp1 SC { $$ = af.exprStmt($1) }
+	: DPRINT exp0 SC { $$ = af.dprint($2) }
+	| RETURN exp0 SC { $$ = af.ret($2) }
+	| exp0 SC { $$ = af.exprStmt($1) }
+	;
+
+exp0
+	: exp1
+	| IDENTIFIER ASSIGN exp0 { $$ = af.assign($1, $3) }
 	;
 
 exp1
@@ -55,7 +60,7 @@ exp2
 exp3
 	: NUM {$$ = af.num($1)}
 	| IDENTIFIER { $$ = af.id($1) }
-	| LPAREN exp1 RPAREN {$$ = $2}
+	| LPAREN exp0 RPAREN {$$ = $2}
 	| IDENTIFIER arg_list { $$ = af.call($1, $2) }
 	;
 
@@ -65,6 +70,6 @@ arg_list
 	;
 
 args
-	: exp1 { $$ = [$1] }
-	| args COMMA exp1 { $1.push($3); $$ = $1 }
+	: exp0 { $$ = [$1] }
+	| args COMMA exp0 { $1.push($3); $$ = $1 }
 	;

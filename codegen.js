@@ -114,11 +114,11 @@ function codegen (ast) {
         code.unshift(buf[1])
         code.unshift(0x10)
         position += 3
-        }; break
+      }; break
       case 'Id': {
         const currentFunction = functionStack[functionStack.length - 1]
         if (!(node.value in currentFunction.params))
-          throw new Error(`${currentFunction.name} has no parameter "${node.value}"`)
+          throw new Error(`${currentFunction.name} has no variable "${node.value}"`)
 
         const paramNumber = currentFunction.params[node.value]
 
@@ -128,7 +128,7 @@ function codegen (ast) {
         code.unshift(buf[1])
         code.unshift(0x1b)
         position += 3
-        }; break
+      }; break
       case 'ExpressionStatement':
         // this represents a single expression in a statement
         // where nothing is done with the return value
@@ -140,6 +140,35 @@ function codegen (ast) {
 
         stack.push(node.value)
         break
+      case 'AssignmentNode': {
+        const currentFunction = functionStack[functionStack.length - 1]
+        if (!(node.name in currentFunction.params))
+          throw new Error(`${currentFunction.name} has no variable "${node.value}"`)
+
+        const paramNumber = currentFunction.params[node.name]
+
+        // console.log('assigning to', node.name, paramNumber)
+
+        const buf = Buffer.allocUnsafe(2)
+        buf.writeInt16LE(paramNumber)
+
+        // since assignments are expressions
+        // they need to leave a value on the stack
+        // for example, "a = b = 10" or "while(c = getChar()) {}"
+
+        // so we load the assigned value back onto the stack after storing it
+        code.unshift(buf[0])
+        code.unshift(buf[1])
+        code.unshift(0x1b)
+        position += 3
+
+        code.unshift(buf[0])
+        code.unshift(buf[1])
+        code.unshift(0x1a)
+        position += 3
+
+        stack.push(node.value)
+      }; break
       default:
         throw new Error(`unsupported node type "${node.type}"`)
     }
@@ -198,7 +227,6 @@ function codegen (ast) {
     for (c of name) constants.push(c.charCodeAt(0))
   }
 
-  console.log(constants)
   // TODO: clean up all this
   const t_benc = n => {
     const buf = Buffer.allocUnsafe(2)

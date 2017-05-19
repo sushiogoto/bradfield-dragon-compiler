@@ -178,6 +178,12 @@ function run (code, data) {
         ip = fSig.address
 
       };break
+      // local store
+      case 0x1a: {
+        a = code.slice(ip, ip += 2).readUInt16BE()
+        let index = callStack.length - 1
+        callStack[index].locals[a] = operands.pop()
+      };break
       // local load
       case 0x1b: {
         a = code.slice(ip, ip += 2).readUInt16BE()
@@ -211,4 +217,4 @@ function run (code, data) {
   }
 }
 
-module.exports = { run, map }
+module.exports = { run, map, load_data }
