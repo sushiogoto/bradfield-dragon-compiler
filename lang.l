@@ -17,6 +17,7 @@ dprint                 return 'DPRINT'
 return                 return 'RETURN'
 while                  return 'WHILE'
 if                     return 'IF'
+else                   return 'ELSE'
 
 [_a-zA-Z][_a-zA-Z0-9]* return 'IDENTIFIER'
 \<                     return 'LT'

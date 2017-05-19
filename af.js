@@ -50,10 +50,16 @@ const af = {
         condition,
         children
     }),
-    if: (condition, children) => ({
+    if: (condition, consequent) => ({
         type: 'IfNode',
         condition,
-        children
+        consequent
+    }),
+    ifElse: (condition, consequent, alternate) => ({
+        type: 'IfElseNode',
+        condition,
+        consequent,
+        alternate
     })
 }
 

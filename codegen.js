@@ -217,18 +217,18 @@ function codegen (ast) {
           start: whileStartId,
           end: whileEndId
         }).concat(node.condition).concat({
-          type: 'WhileConditionalJump',
-          start: whileStartId,
-          end: whileEndId
+          type: 'ConditionalJumpIfFalse',
+          target: whileEndId
         }).concat(node.children)
         break
-      case 'WhileConditionalJump':
-        // we don't know the address of the end of the while loop yet
+      case 'ConditionalJumpIfFalse':
+        // this is shared between while loops, if statements and if else statements
+        // we don't know the address of the end of the conditional yet
         // so we'll use a placeholder value to represent it
         code.unshift(0) // empty placeholder
         code.unshift({
           type: 'symbol',
-          id: node.end
+          id: node.target
         })
         code.unshift(0x16)
         position += 3
@@ -246,19 +246,39 @@ function codegen (ast) {
 
         // add phony node to emit if conditional jump
         stack = stack.concat(node.condition).concat({
-          type: 'IfConditionalJump',
-          end: ifEndId
-        }).concat(node.children)
+          type: 'ConditionalJumpIfFalse',
+          target: ifEndId
+        }).concat(node.consequent)
         break
-      case 'IfConditionalJump':
-        // we don't know the address of the end of the while loop yet
+      case 'IfElseNode':
+        const ifElseEndId = uniq()
+        const ifElseMiddleId = uniq()
+
+        symbols[ifElseEndId] = position
+
+        // add phony node to emit if conditional jump
+        stack = stack.concat(node.condition).concat({
+          type: 'ConditionalJumpIfFalse',
+          target: ifElseMiddleId
+        }).concat(node.consequent).concat({
+          type: 'IfElseMiddle',
+          middle: ifElseMiddleId,
+          end: ifElseEndId
+        }).concat(node.alternate)
+        break
+      case 'IfElseMiddle':
+        // mark the beginning of the alternate
+        symbols[node.middle] = position
+
+        // jump to end of if-else after executing consequent
+        // we don't know the address of the end of the conditional yet
         // so we'll use a placeholder value to represent it
         code.unshift(0) // empty placeholder
         code.unshift({
           type: 'symbol',
           id: node.end
         })
-        code.unshift(0x16)
+        code.unshift(0x15)
         position += 3
 
         break

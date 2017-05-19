@@ -38,6 +38,7 @@ stmt
 	: DPRINT exp0 SC { $$ = af.dprint($2) }
 	| RETURN exp0 SC { $$ = af.ret($2) }
 	| IF LPAREN exp0 RPAREN LCURLY stmts RCURLY { $$ = af.if($3, $6) }
+	| IF LPAREN exp0 RPAREN LCURLY stmts RCURLY ELSE LCURLY stmts RCURLY { $$ = af.ifElse($3, $6, $10) }
 	| WHILE LPAREN exp0 RPAREN LCURLY stmts RCURLY { $$ = af.while($3, $6) }
 	| exp0 SC { $$ = af.exprStmt($1) }
 	;
