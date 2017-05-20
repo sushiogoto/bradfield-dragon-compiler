@@ -130,6 +130,8 @@ function load_consts (buf, n, i = 0) {
   return [constants, i]
 }
 
+const values = vars => vars.map(v => v.value)
+
 function run (code, data, trace) {
   let { entry_address, globals_count, constants } = load_data(data)
   let globals = new Array(globals_count)
@@ -145,7 +147,7 @@ function run (code, data, trace) {
       console.log({
         function: callStack[callStack.length - 1].fnName,
         currentInstruction: map[currentInstruction],
-        ip, operands, globals, locals: callStack[callStack.length - 1].locals
+        ip, operands, globals, locals: values(callStack[callStack.length - 1].locals)
       })
     }
 
@@ -259,7 +261,9 @@ function run (code, data, trace) {
           throw new Error(`${fSig} is not a function`)
         let locals = []
         for(let j=0; j < fSig.arg_count; j++){
-          locals.push(operands.pop())
+          locals.push({
+            value: operands.pop()
+          })
         }
         for(let j=0; j < fSig.capturedLocals.length; j++){
           locals.push(fSig.capturedLocals[j])
@@ -278,13 +282,16 @@ function run (code, data, trace) {
       case 0x1a: {
         a = code.slice(ip, ip += 2).readUInt16BE()
         let index = callStack.length - 1
-        callStack[index].locals[a] = operands.pop()
+        if (callStack[index].locals[a] === undefined)
+          callStack[index].locals[a] = { }
+
+        callStack[index].locals[a].value = operands.pop()
       };break
       // local load
       case 0x1b: {
         a = code.slice(ip, ip += 2).readUInt16BE()
         let index = callStack.length - 1
-        operands.push(callStack[index].locals[a])
+        operands.push(callStack[index].locals[a].value)
       };break
       // mult
       case 0x1c:
@@ -325,7 +332,7 @@ function run (code, data, trace) {
         if (closure.type !== 0x13)
           throw new Error(`value ${closure} is not a closure`)
 
-        const fn = Function(closure.name, closure.address, closure.arg_count, closure.locals_count, callStack[callStack.length - 1].locals.slice())
+        const fn = Function(closure.name, closure.address, closure.arg_count, closure.locals_count, callStack[callStack.length - 1].locals)
         operands.push(fn)
         break;
       // halt
