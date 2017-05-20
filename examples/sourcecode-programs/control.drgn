@@ -1,0 +1,95 @@
+// declare square function
+dgn square (n) { return n * n; }
+
+dgn b_test() {
+  sum = 0;
+  index = 0;
+  while (index < 5) {
+    sum = sum + index;
+    index = index + 1;
+  }
+
+  return sum;
+}
+
+dgn fib_iter(n) {
+  a = 0;
+  b = 1;
+  i = 0;
+  while (i < n) {
+    c = a + b;
+    a = b;
+    b = c;
+    i = i + 1;
+
+    //dprint a;
+  }
+
+  return a;
+}
+
+dgn fib(n) {
+  if (n < 2)
+    return 1;
+
+  return fib(n - 1) + fib(n - 2);
+}
+
+dgn fizzbuzz() {
+  i = 1;
+  while (i <= 100) {
+    if (i % 3 == 0 && i % 5 == 0)
+      dprint 'FizzBuzz';
+    else if (i % 3 == 0)
+      dprint 'Fizz';
+    else if (i % 5 == 0)
+      dprint 'Buzz';
+    else
+      dprint i;
+
+    i = i + 1;
+  }
+
+  return 0;
+}
+
+dgn createCounter() {
+  count = 0;
+
+  return dgn count() {
+    count = count + 1;
+    return count;
+  };
+}
+
+// print result of invoking function
+// n.b. dprint is keyword, not function
+//dgn main () { dprint square(2); } // prints 4
+dgn main () {
+  dprint square;
+  number = 6 / 2 - 1;
+
+  sqr = square;
+
+  hello = dgn hello(a) {
+    dprint 'Hello';
+    dprint a;
+    return 0;
+  };
+
+  hello('David');
+
+  fizzbuzz();
+  dprint '====';
+  dprint b_test();
+  dprint '====';
+  dprint sqr(number);
+  dprint fib_iter(10);
+  dprint fib(10);
+
+  counter = createCounter();
+  dprint counter();
+  dprint counter();
+  dprint counter();
+  dprint counter();
+}
