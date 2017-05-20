@@ -2,6 +2,8 @@
 # test/debug the code generator
 $ node dev/eval.js <<< 'dprint 1 + 3 - 2;'
 2
+
+specify '--trace' or '-t' to enable tracing output
 */
 
 const fs = require('fs')
@@ -10,8 +12,8 @@ const gen = require('../codegen')
 const input = fs.readFileSync('/dev/stdin', 'utf8')
 const { run } = require('../vm')
 
-const code = Buffer.from(gen(parse(input)))
-// todo: use data generated from codegen once it does that
-const data = Buffer.from([0x00, 0x00]) // 0 (16bit big end int) globals
+const trace = process.argv.indexOf('--trace') > 0 || process.argv.indexOf('-t') > 0;
 
-run(code, data)
+const { code, data } = gen(parse(input))
+
+run(code, data, trace)

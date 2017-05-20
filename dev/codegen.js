@@ -8,7 +8,6 @@ const fs = require('fs')
 const parse = require('../parse')
 const gen = require('../codegen')
 const input = fs.readFileSync('/dev/stdin', 'utf8')
-
 // todo: output code and data segments
 // todo: dissasemble output
 console.dir(gen(parse(input)))
