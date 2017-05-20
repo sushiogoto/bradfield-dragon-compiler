@@ -71,7 +71,13 @@ const af = {
     string: value => ({
         type: 'String',
         value,
-    })
+    }),
+    closure: (name, params, children) => ({
+        type: 'ClosureNode',
+        name,
+        params,
+        children
+    }),
 }
 
 

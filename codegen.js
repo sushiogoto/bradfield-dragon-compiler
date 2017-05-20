@@ -3,9 +3,15 @@
 // so if you read the generated code left to right, it looks like the
 // result of a postorder (right to left) traversal
 
+const af = require('./af')
+
 const uniq = (() => {
-  let counter = 0
-  return () => `block${counter++}`
+  let counts = {}
+  return (namespace = 'block') => {
+    if (!counts.hasOwnProperty(namespace))
+      counts[namespace] = 0
+    return `${namespace}${counts[namespace]++}`
+  }
 })()
 
 function getFunctions(ast) {
@@ -83,6 +89,50 @@ function codegen (ast) {
         // while loop to get the true address
         node.fn.positionFromEnd = position
         functionStack.pop()
+        break
+      case 'ClosureNode':
+        const enclosingFn = functionStack[functionStack.length - 1]
+        const clName = `<${enclosingFn.name}_${node.name || 'anonymous'}_${uniq('closure')}>`
+
+        const constantNumber = constants.length;
+
+        const closure = {
+          type: 'closure',
+          name: clName,
+          number: constantNumber,
+          params: node.params,
+          locals: node.params.slice().concat(enclosingFn.locals),
+          children: node.children
+        }
+        constants.push(closure)
+
+        // the closure will have been added as a constant
+        // we need to load it onto the stack and use it to create a function
+
+        code.unshift(0x28)
+        position++
+
+        const buf = Buffer.allocUnsafe(2)
+        buf.writeInt16LE(constantNumber)
+        code.unshift(buf[0])
+        code.unshift(buf[1])
+        code.unshift(0x21) // load closure
+        position += 3
+
+        // emit closure body at the very end
+        stack.unshift({
+          type: 'StartClosure',
+          closure
+        })
+        break
+      case 'StartClosure':
+        functionStack.push(node.closure)
+
+        // reuse function code for the end
+        stack = stack.concat({
+          type: 'EndFunction',
+          fn: node.closure
+        }).concat(node.closure.children)
         break
       case 'DPrint':
         code.unshift(0x19)
@@ -360,7 +410,7 @@ function codegen (ast) {
         code.unshift(0x21)
         position += 3
       }; break
-      default: console.log(node)
+      default:
         throw new Error(`unsupported node type "${node.type}"`)
     }
   }
@@ -421,8 +471,25 @@ function codegen (ast) {
 
         for (c of constant.name) constantsCode.push(c.charCodeAt(0))
         }; break
+      case 'closure': {
+        const address = code.length - constant.positionFromEnd
+
+        constantsCode.push(0x13) // load closure stub
+
+        const addrBuf = Buffer.allocUnsafe(2)
+        addrBuf.writeUInt16BE(address)
+
+        constantsCode.push(addrBuf[0]) // code address
+        constantsCode.push(addrBuf[1])
+
+        constantsCode.push(constant.params.length) // number of arguments
+        constantsCode.push(constant.locals.length) // number of locals
+        constantsCode.push(constant.name.length) // length of name
+
+        for (c of constant.name) constantsCode.push(c.charCodeAt(0))
+        }; break
       case 'string': {
-        constantsCode.push(0x12) // load function sig
+        constantsCode.push(0x12) // load string
         constantsCode.push(constant.value.length) // length of name
         for (c of constant.value) constantsCode.push(c.charCodeAt(0))
         }; break

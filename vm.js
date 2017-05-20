@@ -27,6 +27,7 @@ const map = {
   0x25: 'and',
   0x26: 'mod',
   0x27: 'equals',
+  0x28: 'create_function', // takes the closure at the top of the stack and turns it into a new function encapsulating the current scope
   0xFF: 'halt',  // stops the interpreter
 }
 
@@ -37,6 +38,27 @@ const loader_codes = {
   0x0f: 'set_globals_count' /* ui16 count */, // set globals array to length of $count
   0x10: 'load_consts' /* ui16 count */,       // load $count consts definitions into consts array
   0x11: 'load_function' // load function
+}
+
+function Function(name, address, arg_count, locals_count, capturedLocals = []) {
+  return {
+    type: 0x11,
+    name,
+    address,
+    arg_count,
+    locals_count,
+    capturedLocals
+  }
+}
+
+function Closure(name, address, arg_count, locals_count) {
+  return {
+    type: 0x13,
+    name,
+    address,
+    arg_count,
+    locals_count
+  }
 }
 
 function load_data (buf, i = 0) {
@@ -75,22 +97,32 @@ function load_consts (buf, n, i = 0) {
     i++, n--, record = {}
     switch (type_byte) {
       // load function code
-      case 0x11:
-        record.type = type_byte
-        record.address = buf.slice(i, i + 2).readUInt16BE(); i += 2
-        record.arg_count = buf[i]; i += 1
-        record.locals_count =  buf[i]; i += 1
+      case 0x11: {
+        const address = buf.slice(i, i + 2).readUInt16BE(); i += 2
+        const arg_count = buf[i]; i += 1
+        const locals_count =  buf[i]; i += 1
         len = buf[i]; i += 1
-        record.name = buf.slice(i, i + len).toString('utf8'); i += len
-        constants.push(record)
-        break;
+        const name = buf.slice(i, i + len).toString('utf8'); i += len
+
+        constants.push(Function(name, address, arg_count, locals_count))
+      }; break
       // load string constant
       case 0x12:
         record.type = type_byte
         len = buf[i]; i += 1
         record.value = buf.slice(i, i + len).toString('utf8'); i += len
         constants.push(record)
-        break;
+        break
+      // load function code
+      case 0x13: {
+        const address = buf.slice(i, i + 2).readUInt16BE(); i += 2
+        const arg_count = buf[i]; i += 1
+        const locals_count =  buf[i]; i += 1
+        len = buf[i]; i += 1
+        const name = buf.slice(i, i + len).toString('utf8'); i += len
+
+        constants.push(Closure(name, address, arg_count, locals_count))
+      }; break
       default:
         throw new Error(`unrecognized const type code ${type_byte.toString(16)} at index of ${i-1} of data`)
     }
@@ -229,6 +261,9 @@ function run (code, data, trace) {
         for(let j=0; j < fSig.arg_count; j++){
           locals.push(operands.pop())
         }
+        for(let j=0; j < fSig.capturedLocals.length; j++){
+          locals.push(fSig.capturedLocals[j])
+        }
         let frame = {
           locals: locals,
           returnAddr: ip,
@@ -283,6 +318,16 @@ function run (code, data, trace) {
           constant = constant.value
         operands.push(constant)
         break
+      // create_function
+      case 0x28:
+        const closure = operands.pop()
+
+        if (closure.type !== 0x13)
+          throw new Error(`value ${closure} is not a closure`)
+
+        const fn = Function(closure.name, closure.address, closure.arg_count, closure.locals_count, callStack[callStack.length - 1].locals.slice())
+        operands.push(fn)
+        break;
       // halt
       case 0xFF:
         if (trace) {

@@ -35,7 +35,11 @@ function disassemble (code, dataBuf) {
         break
       case 0x12:
         // functions[constant.address] = constant.name
-        args = ['string', constant.value]
+        args = ['string', `'${constant.value}'`]
+        break
+      case 0x13:
+        functions[constant.address] = constant.name
+        args = ['closure', constant.name, constant.arg_count, constant.locals_count]
         break
       default:
         throw new Error(`unknown constant type ${constant.type.toString(16)}`)
@@ -76,8 +80,9 @@ function disassemble (code, dataBuf) {
       address: i
     }
 
-    if (immediate)
+    if (immediate !== undefined) {
       line.immediate = immediate
+    }
 
     switch (opName) {
       case 'lconstant':
@@ -86,6 +91,8 @@ function disassemble (code, dataBuf) {
           line.annotation = `${constant.name}()`
         if (constant.type === 0x12) // string
           line.annotation = `'${constant.value}'`
+        if (constant.type === 0x13) // string
+          line.annotation = `${constant.name}`
         break
     }
 

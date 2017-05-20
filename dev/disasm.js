@@ -17,7 +17,8 @@ const lines = disassemble(code, data)
 lines.forEach(line => {
   switch (line.type) {
     case 'Operation':
-      let str = `\t${line.value} ${line.immediate || ''}`
+      const formattedImmediate = line.immediate === undefined ? '' : line.immediate
+      let str = `\t${line.value} ${formattedImmediate}`
       if (line.annotation)
         str += `\t# ${line.annotation}`
       console.log(str)

@@ -104,6 +104,8 @@ exp3
 	| IDENTIFIER { $$ = af.id($1) }
 	| LPAREN exp0 RPAREN {$$ = $2}
 	| exp3 arg_list { $$ = af.call($1, $2) }
+	| DGN IDENTIFIER param_list LCURLY stmts RCURLY {$$ = af.closure($2, $3, $5)}
+	| DGN param_list LCURLY stmts RCURLY {$$ = af.closure(null, $2, $4)}
 	;
 
 arg_list
